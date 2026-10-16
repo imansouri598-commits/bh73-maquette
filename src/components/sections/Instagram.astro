@@ -1,35 +1,81 @@
 ---
 import { Image } from 'astro:assets';
 import Icone from '../Icone.astro';
-import { magasin, photos } from '../../data/magasin';
+import Statut from '../Statut.astro';
+import { magasin, photos, preuves } from '../../data/magasin';
 
-const fil = [
-  photos.lampeCollage,
-  photos.sacCuirRouge,
-  photos.tableVannerie,
+// Mur : photos de la boutique, PAS les dernières publications Instagram (rien n'est relié au compte en direct).
+// Choisies pour ne pas répéter les photos déjà vues plus haut sur l'accueil (cartes univers, produits en ligne).
+const mur = [
+  photos.boutiqueInterieur,
   photos.ceramiqueVerte,
-  photos.echarpeCarree,
-  photos.commodeVases,
+  photos.sacCuirNoir,
+  photos.tableVannerie,
+  photos.coinSalon,
+  photos.boutiqueRayons,
 ];
+// Une photo en paysage, recadrée en carré, doit être chargée plus large que sa case.
+const tailles = (largeur: number, hauteur: number) => {
+  const f = Math.max(1, largeur / hauteur);
+  return `(min-width: 960px) ${Math.round(190 * f)}px, ${Math.round(33 * f)}vw`;
+};
+
+// Preuve sociale : abonnés relevés dans magasin.ts (preuves.instagram), jamais au chiffre près car ils évoluent.
+// Règle : « près de N » si le relevé est à moins de 3 % sous le millier rond N le plus proche,
+// sinon « plus de » le millier inférieur (4 978 → « près de 5 000 » ; 5 230 → « plus de 5 000 »).
+const nombre = new Intl.NumberFormat('fr-FR');
+function abonnesArrondis(n: number) {
+  const rond = Math.round(n / 1000) * 1000;
+  if (n < 1000 || n === rond) return nombre.format(n);
+  if (n < rond && (rond - n) / rond <= 0.03) return `près de ${nombre.format(rond)}`;
+  return `plus de ${nombre.format(Math.floor(n / 1000) * 1000)}`;
+}
+const abonnes = abonnesArrondis(preuves.instagram.abonnes);
 ---
 
 <!-- Instagram -->
-<section class="section insta">
+<section class="section insta" id="instagram">
   <div class="conteneur insta__grille">
     <div class="insta__texte">
       <p class="surtitre">Les arrivages</p>
-      <h2 class="titre-section">Les nouveautés passent d'abord sur Instagram</h2>
-      <p class="chapo">
-        Près de 5 000 personnes suivent les arrivages sur {magasin.instagram.compte}. Une pièce vous plaît ? Appelez la boutique pour savoir si elle est encore là.
+      <h2 class="titre-section">Suivez les nouveautés sur Instagram</h2>
+      <p class="insta__compte">
+        <span class="insta__avatar"><Icone nom="instagram" /></span>
+        <span>
+          <span class="insta__pseudo">{magasin.instagram.compte}</span>
+          <span class="insta__abonnes">{abonnes.charAt(0).toUpperCase() + abonnes.slice(1)} abonnés</span>
+        </span>
       </p>
+      <p class="chapo">La boutique y publie ses nouveautés et ses arrivages : repérez une pièce avant de vous déplacer.</p>
       <div class="insta__actions">
-        <a class="bouton bouton--sombre" href={magasin.instagram.url}><Icone nom="instagram" />Suivre {magasin.instagram.compte}</a>
-        <a class="bouton bouton--contour" href={magasin.telephone.lien}><Icone nom="telephone" />Réserver une pièce</a>
+        <a class="bouton bouton--sombre" href={magasin.instagram.url}>
+          <Icone nom="instagram" />
+          Suivre sur Instagram
+          <svg class="insta__externe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
+        </a>
       </div>
     </div>
-    <a class="insta__mur" href={magasin.instagram.url} aria-label="Voir les publications sur Instagram">
-      {fil.map((p) => <Image src={p} alt="" widths={[240, 400]} sizes="(min-width: 960px) 200px, 33vw" />)}
-    </a>
+
+    <div class="insta__cote">
+      <figure class="insta__mur">
+        <div class="insta__photos">
+          {mur.map((p) => <Image src={p} alt="" widths={[240, 400, 700]} sizes={tailles(p.width, p.height)} />)}
+        </div>
+        <figcaption>Photos de la boutique</figcaption>
+      </figure>
+
+      <div class="insta__piece">
+        <h3 class="insta__piece-titre"><Icone nom="vintage" />Une pièce vous plaît ?</h3>
+        <p>
+          Les pièces de seconde main et vintage sont uniques : une fois vendues, elles ne reviennent pas. Appelez pour savoir si
+          celle qui vous plaît est encore là.
+        </p>
+        <div class="insta__appel">
+          <a class="bouton bouton--contour" href={magasin.telephone.lien}><Icone nom="telephone" />Appeler la boutique</a>
+          <Statut class="insta__statut" />
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -42,39 +88,131 @@ const fil = [
   .insta__grille {
     display: grid;
     gap: 40px;
-    align-items: center;
   }
 
   @media (min-width: 960px) {
     .insta__grille {
       grid-template-columns: 1fr 1.1fr;
       gap: 64px;
+      align-items: center;
     }
+  }
+
+  .insta__compte {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 22px;
+    line-height: 1.3;
+  }
+
+  .insta__avatar {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--encre);
+    color: var(--or-clair);
+  }
+
+  .insta__avatar svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .insta__pseudo {
+    display: block;
+    font-weight: 600;
+  }
+
+  .insta__abonnes {
+    display: block;
+    color: var(--discret);
+    font-size: 0.95rem;
   }
 
   .insta__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-top: 28px;
+    margin-top: 26px;
+  }
+
+  .bouton .insta__externe {
+    width: 16px;
+    height: 16px;
   }
 
   .insta__mur {
+    margin: 0;
+  }
+
+  .insta__photos {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
   }
 
-  .insta__mur img {
+  .insta__photos img {
     aspect-ratio: 1;
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 6px;
-    transition: opacity 0.2s;
   }
 
-  .insta__mur:hover img {
-    opacity: 0.85;
+  .insta__mur figcaption {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--discret);
+  }
+
+  .insta__piece {
+    margin-top: 24px;
+    padding: 22px;
+    border-radius: var(--rayon);
+    background: var(--lin);
+    border: 1px solid var(--trait);
+  }
+
+  .insta__piece-titre {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.35rem;
+  }
+
+  .insta__piece-titre svg {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    color: var(--or-fonce);
+  }
+
+  .insta__piece p {
+    margin-top: 8px;
+    color: var(--discret);
+  }
+
+  .insta__appel {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 18px;
+    margin-top: 18px;
+  }
+
+  .insta__statut {
+    font-size: 0.92rem;
+  }
+
+  /* Téléphone : boutons pleine largeur, plus faciles à toucher. */
+  @media (max-width: 639px) {
+    .insta__actions .bouton,
+    .insta__appel .bouton {
+      width: 100%;
+    }
   }
 </style>

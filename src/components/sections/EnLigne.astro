@@ -1,42 +1,79 @@
 ---
 import Icone from '../Icone.astro';
 import { magasin } from '../../data/magasin';
-import { produitsEnLigne } from '../../data/boutique';
+import { boutiqueEnLigne } from '../../data/boutique';
 
-const produits = await produitsEnLigne(4);
+const { produits, total } = await boutiqueEnLigne(4);
+
+// Bouton : nombre réel de produits publiés sur la boutique en ligne, lu au build.
+const libelleBouton = total > produits.length ? `Voir les ${total} produits en ligne` : 'Voir la boutique en ligne';
 ---
 
-<!-- Boutique en ligne -->
+<!-- Boutique en ligne : masquée si le catalogue Shopify était injoignable au build. -->
 {
   produits.length > 0 && (
     <section class="section en-ligne" id="en-ligne">
-      <div class="conteneur">
-        <div class="en-ligne__entete">
-          <div>
-            <p class="surtitre surtitre--clair">Aussi en ligne</p>
-            <h2 class="titre-section">Commandez depuis chez vous</h2>
-            <p class="chapo chapo--clair">Une partie de la sélection est disponible sur la boutique en ligne. Ces produits s'affichent ici automatiquement.</p>
-          </div>
+      <div class="conteneur en-ligne__grille">
+        <div class="en-ligne__texte">
+          <p class="surtitre surtitre--clair">Boutique en ligne</p>
+          <h2 class="titre-section">Commandez depuis chez vous</h2>
+          <p class="chapo chapo--clair">
+            Une partie de la sélection est aussi en vente sur la boutique en ligne BH&nbsp;73. Choisissez un produit pour le commander.
+          </p>
+        </div>
+
+        <ul class="en-ligne__liste" role="list">
+          {produits.map((p) => (
+            <li>
+              <a class="en-ligne__produit" href={p.url}>
+                <div class="en-ligne__media">
+                  <img
+                    src={p.image}
+                    srcset={p.srcset}
+                    sizes="(min-width: 960px) 270px, 45vw"
+                    alt=""
+                    loading="lazy"
+                    width="720"
+                    height="900"
+                    style={p.zoom !== 1 ? `--zoom: ${p.zoom}` : undefined}
+                  />
+                  {p.nouveauJusqua && (
+                    <span class="pastille pastille--or en-ligne__nouveau" data-nouveau-jusqua={p.nouveauJusqua}>
+                      Nouveau
+                    </span>
+                  )}
+                </div>
+                <p class="en-ligne__nom">{p.nom}</p>
+                {p.marque && <p class="en-ligne__marque">{p.marque}</p>}
+                <p class="en-ligne__prix">
+                  {p.prix}
+                  <span class="visuellement-cache">, sur la boutique en ligne</span>
+                </p>
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <div class="en-ligne__action">
           <a class="bouton bouton--or" href={magasin.boutiqueEnLigne}>
             <Icone nom="sac" />
-            Voir la boutique en ligne
+            {libelleBouton}
+            <svg class="en-ligne__externe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" /></svg>
           </a>
-        </div>
-        <div class="produits">
-          {produits.map((p) => (
-            <a class="produit" href={p.url}>
-              <div class="produit__media">
-                <img src={p.image} alt={p.titre} loading="lazy" width="700" height="875" />
-              </div>
-              <p class="produit__titre">{p.titre}</p>
-              <p class="produit__prix">{p.prix}</p>
-            </a>
-          ))}
+          <p class="en-ligne__note">La commande se fait sur la boutique en ligne BH&nbsp;73, hébergée par Shopify.</p>
         </div>
       </div>
     </section>
   )
 }
+
+<script>
+  // « Nouveau » est calculé au build (mise en ligne Shopify il y a moins de 60 jours, règle dans data/boutique.ts).
+  // Si la page est consultée après la date limite sans avoir été régénérée, l'étiquette est retirée.
+  document.querySelectorAll<HTMLElement>('[data-nouveau-jusqua]').forEach((etiquette) => {
+    if (Date.now() > Date.parse(etiquette.dataset.nouveauJusqua ?? '')) etiquette.remove();
+  });
+</script>
 
 <style is:global>
   /* Boutique en ligne */
@@ -45,59 +82,139 @@ const produits = await produitsEnLigne(4);
     color: #fff;
   }
 
-  .en-ligne__entete {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 24px;
-  }
-
-  .produits {
+  /* Mobile : texte, produits, puis bouton. Ordinateur : bouton à droite du titre, produits dessous. */
+  .en-ligne__grille {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    margin-top: 40px;
+    gap: 36px;
+    grid-template-areas: 'texte' 'liste' 'action';
   }
 
   @media (min-width: 960px) {
-    .produits {
-      grid-template-columns: repeat(4, 1fr);
+    .en-ligne__grille {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: 'texte action' 'liste liste';
+      column-gap: 48px;
+      row-gap: 44px;
+      align-items: end;
     }
   }
 
-  .produit {
+  .en-ligne__texte {
+    grid-area: texte;
+  }
+
+  .en-ligne__liste {
+    grid-area: liste;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 960px) {
+    .en-ligne__liste {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 24px;
+    }
+  }
+
+  .en-ligne__liste > li {
+    display: flex;
+  }
+
+  .en-ligne__produit {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    border-radius: var(--rayon);
     text-decoration: none;
   }
 
-  .produit__media {
+  .en-ligne__media {
+    position: relative;
     aspect-ratio: 4 / 5;
-    border-radius: 12px;
+    border-radius: var(--rayon);
     overflow: hidden;
-    background: #2a2724;
+    background: var(--charbon);
   }
 
-  .produit__media img {
+  .en-ligne__media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transform: scale(var(--zoom, 1));
     transition: transform 0.5s ease;
   }
 
-  .produit:hover .produit__media img {
-    transform: scale(1.04);
+  .en-ligne__produit:hover .en-ligne__media img {
+    transform: scale(calc(var(--zoom, 1) * 1.04));
   }
 
-  .produit__titre {
+  .en-ligne__nouveau {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+  }
+
+  .en-ligne__nom {
     margin-top: 12px;
-    font-size: 0.95rem;
+    font-size: 1rem;
     line-height: 1.35;
-    color: rgb(255 255 255 / 0.9);
+    color: rgb(255 255 255 / 0.92);
   }
 
-  .produit__prix {
+  .en-ligne__produit:hover .en-ligne__nom {
+    text-decoration: underline;
+    text-decoration-color: var(--or);
+    text-underline-offset: 3px;
+  }
+
+  .en-ligne__marque {
+    margin-top: 2px;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(255 255 255 / 0.6);
+  }
+
+  .en-ligne__prix {
     margin-top: 4px;
+    font-size: 1.05rem;
     font-weight: 600;
     color: var(--or-clair);
+  }
+
+  .en-ligne__action {
+    grid-area: action;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  @media (min-width: 640px) {
+    .en-ligne__action {
+      align-items: flex-start;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .en-ligne__action {
+      align-items: flex-end;
+      text-align: right;
+    }
+  }
+
+  .bouton .en-ligne__externe {
+    width: 16px;
+    height: 16px;
+  }
+
+  .en-ligne__note {
+    max-width: 34ch;
+    font-size: 0.85rem;
+    color: rgb(255 255 255 / 0.6);
   }
 </style>
