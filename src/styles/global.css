@@ -1,0 +1,267 @@
+:root {
+  --charbon: #202020;
+  --encre: #1a1714;
+  --or: #bd810f;
+  --or-clair: #d9a441;
+  --or-fonce: #8a5c0a;
+  --creme: #f6f1e7;
+  --sable: #ebe2d1;
+  --lin: #fbf8f2;
+  --texte: #2a2620;
+  --discret: #6b6358;
+  --trait: #ddd2bf;
+
+  --serif: 'Fraunces Variable', Georgia, serif;
+  --sans: 'DM Sans Variable', system-ui, sans-serif;
+
+  --largeur: 1200px;
+  --gouttiere: clamp(16px, 4vw, 40px);
+  --rayon: 14px;
+  --ombre: 0 18px 40px -24px rgb(26 23 20 / 0.45);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--creme);
+  color: var(--texte);
+  font-family: var(--sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.conteneur {
+  width: 100%;
+  max-width: var(--largeur);
+  margin-inline: auto;
+  padding-inline: var(--gouttiere);
+}
+
+.section {
+  padding-block: clamp(56px, 9vw, 112px);
+}
+
+.surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--or-fonce);
+}
+
+.surtitre::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+
+.titre-section {
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  margin-top: 14px;
+}
+
+.chapo {
+  margin-top: 16px;
+  max-width: 56ch;
+  color: var(--discret);
+  font-size: 1.125rem;
+}
+
+/* Boutons */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: 600 1rem/1 var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s,
+    transform 0.2s;
+}
+
+.bouton:hover {
+  transform: translateY(-1px);
+}
+
+.bouton svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.bouton--or {
+  background: var(--or);
+  color: var(--encre);
+}
+
+.bouton--or:hover {
+  background: var(--or-clair);
+}
+
+.bouton--clair {
+  border-color: rgb(255 255 255 / 0.45);
+  color: #fff;
+}
+
+.bouton--clair:hover {
+  background: rgb(255 255 255 / 0.1);
+  border-color: #fff;
+}
+
+.bouton--sombre {
+  background: var(--encre);
+  color: var(--creme);
+}
+
+.bouton--sombre:hover {
+  background: #000;
+}
+
+.bouton--contour {
+  border-color: var(--texte);
+  color: var(--texte);
+}
+
+.bouton--contour:hover {
+  background: var(--texte);
+  color: var(--creme);
+}
+
+/* Statut ouvert / fermé */
+.statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+}
+
+.statut__point {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #9a948a;
+  flex: none;
+}
+
+.statut[data-etat='ouvert'] .statut__point {
+  background: #4cbb6c;
+  box-shadow: 0 0 0 4px rgb(76 187 108 / 0.22);
+}
+
+.statut[data-etat='ferme'] .statut__point {
+  background: #d9614c;
+}
+
+.a-confirmer {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fff3cd;
+  color: #7a5800;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 2px solid var(--or);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition: none !important;
+  }
+}
+
+.carte__vide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding-top: 18%;
+  background: repeating-linear-gradient(135deg, #2a2724 0 14px, #262320 14px 28px);
+  color: rgb(255 255 255 / 0.55);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+}
+
+.carte__vide img,
+.carte__media .carte__vide img,
+.u-hero__media .carte__vide img {
+  width: 72px;
+  height: auto;
+  opacity: 0.55;
+}
+
+.surtitre--clair {
+  color: var(--or-clair);
+}
+
+.chapo--clair {
+  color: rgb(255 255 255 / 0.7);
+}

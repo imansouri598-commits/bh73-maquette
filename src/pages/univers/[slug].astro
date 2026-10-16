@@ -1,0 +1,239 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Icone from '../../components/Icone.astro';
+import lucane from '../../assets/lucane.png';
+import { magasin, univers, type Univers } from '../../data/magasin';
+import { lien } from '../../data/lien';
+
+export function getStaticPaths() {
+  return univers.map((u) => ({ params: { slug: u.slug }, props: { u } }));
+}
+
+const { u } = Astro.props as { u: Univers };
+const autres = univers.filter((x) => x.slug !== u.slug);
+---
+
+<Base titre={`${u.titre} · BH 73 Concept store, Angoulême`} description={`${u.intro} En boutique au ${magasin.adresse.rue}, Angoulême.`}>
+  <section class="u-hero">
+    <div class="conteneur u-hero__grille">
+      <div class="u-hero__texte">
+        <a class="u-retour" href={lien('/#univers')}>← Tous les univers</a>
+        <p class="surtitre">Univers</p>
+        <h1 class="u-hero__titre">{u.titre}</h1>
+        <p class="chapo">{u.intro}</p>
+        <ul class="u-rayons">
+          {u.rayons.map((r) => <li>{r}</li>)}
+        </ul>
+        <p class="u-prix"><strong>Fourchette de prix :</strong> <span class="a-confirmer">à compléter avec la boutique</span></p>
+      </div>
+      <div class="u-hero__media">
+        {
+          u.photo ? (
+            <Image src={u.photo} alt="" widths={[480, 800, 1100]} sizes="(min-width: 960px) 50vw, 100vw" loading="eager" />
+          ) : (
+            <div class="carte__vide">
+              <Image src={lucane} alt="" width={120} />
+              <span>Photos à faire en boutique</span>
+            </div>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  {
+    u.galerie.length > 1 && (
+      <section class="section u-galerie-section">
+        <div class="conteneur">
+          <h2 class="titre-section">En ce moment en rayon</h2>
+          <div class="u-galerie">
+            {u.galerie.map((img) => (
+              <Image src={img} alt="" widths={[360, 600, 900]} sizes="(min-width: 960px) 33vw, 50vw" />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  <section class="section u-cta">
+    <div class="conteneur u-cta__boite">
+      <div>
+        <h2 class="titre-section">Une pièce vous a tapé dans l'œil ?</h2>
+        <p class="chapo chapo--clair">
+          Les pièces uniques partent vite. Appelez la boutique pour savoir si elle est encore là, ou passez la voir : parking devant la porte.
+        </p>
+      </div>
+      <div class="u-cta__actions">
+        <a class="bouton bouton--or" href={magasin.telephone.lien}><Icone nom="telephone" />{magasin.telephone.affiche}</a>
+        <a class="bouton bouton--clair" href={magasin.instagram.url}><Icone nom="instagram" />Voir les arrivages</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section u-autres">
+    <div class="conteneur">
+      <p class="surtitre">À voir aussi</p>
+      <div class="u-autres__liste">
+        {
+          autres.map((x) => (
+            <a href={lien(`/univers/${x.slug}/`)}>
+              {x.titre} <Icone nom="fleche" />
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style is:global>
+  .u-hero {
+    padding-block: clamp(32px, 6vw, 72px) clamp(48px, 7vw, 88px);
+  }
+
+  .u-hero__grille {
+    display: grid;
+    gap: 36px;
+    align-items: center;
+  }
+
+  @media (min-width: 960px) {
+    .u-hero__grille {
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+    }
+  }
+
+  .u-retour {
+    display: block;
+    width: fit-content;
+    margin-bottom: 22px;
+    color: var(--discret);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .u-retour:hover {
+    color: var(--texte);
+  }
+
+  .u-hero__titre {
+    margin-top: 14px;
+    font-size: clamp(2.4rem, 5.5vw, 4rem);
+    font-weight: 500;
+  }
+
+  .u-rayons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 26px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .u-rayons li {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--trait);
+    background: var(--lin);
+    font-size: 0.92rem;
+  }
+
+  .u-prix {
+    margin-top: 22px;
+    font-size: 0.95rem;
+  }
+
+  .u-hero__media {
+    aspect-ratio: 4 / 5;
+    border-radius: var(--rayon);
+    overflow: hidden;
+    box-shadow: var(--ombre);
+  }
+
+  .u-hero__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .u-galerie-section {
+    background: var(--sable);
+  }
+
+  .u-galerie {
+    columns: 2 220px;
+    column-gap: 14px;
+    margin-top: 36px;
+  }
+
+  .u-galerie img {
+    width: 100%;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    break-inside: avoid;
+  }
+
+  .u-cta__boite {
+    display: grid;
+    gap: 28px;
+    padding: clamp(28px, 5vw, 56px);
+    border-radius: calc(var(--rayon) + 6px);
+    background: var(--charbon);
+    color: #fff;
+  }
+
+  @media (min-width: 960px) {
+    .u-cta__boite {
+      grid-template-columns: 1.4fr 1fr;
+      align-items: center;
+    }
+  }
+
+  .u-cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (min-width: 960px) {
+    .u-cta__actions {
+      justify-content: flex-end;
+    }
+  }
+
+  .u-autres {
+    padding-top: 0;
+  }
+
+  .u-autres__liste {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .u-autres__liste a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: var(--lin);
+    border: 1px solid var(--trait);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .u-autres__liste a:hover {
+    border-color: var(--texte);
+  }
+
+  .u-autres__liste svg {
+    width: 16px;
+    height: 16px;
+  }
+</style>

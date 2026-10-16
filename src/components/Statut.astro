@@ -1,0 +1,67 @@
+---
+import { horaires } from '../data/magasin';
+
+type Props = { class?: string };
+const { class: classe } = Astro.props;
+---
+
+<span class:list={['statut', classe]} data-statut data-horaires={JSON.stringify(horaires)}>
+  <span class="statut__point"></span>
+  <span class="statut__texte">Horaires d'ouverture</span>
+</span>
+
+<script>
+  type Jour = { jour: string; creneaux: [string, string][] };
+
+  const enMinutes = (hhmm: string) => {
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const enHeure = (hhmm: string) => {
+    const [h, m] = hhmm.split(':');
+    return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`;
+  };
+
+  // Heure de Paris, quel que soit le fuseau du visiteur.
+  function maintenantAParis() {
+    const parties = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Paris',
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date());
+    const val = (type: string) => parties.find((p) => p.type === type)?.value ?? '';
+    const jours = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return { jour: jours.indexOf(val('weekday')), minutes: Number(val('hour')) * 60 + Number(val('minute')) };
+  }
+
+  function calculer(semaine: Jour[]) {
+    const { jour, minutes } = maintenantAParis();
+    const creneauEnCours = semaine[jour].creneaux.find(([o, f]) => minutes >= enMinutes(o) && minutes < enMinutes(f));
+    if (creneauEnCours) {
+      return { etat: 'ouvert', texte: `Ouvert · ferme à ${enHeure(creneauEnCours[1])}`, jour };
+    }
+    for (let decalage = 0; decalage < 7; decalage++) {
+      const j = (jour + decalage) % 7;
+      const prochain = semaine[j].creneaux.find(([o]) => decalage > 0 || enMinutes(o) > minutes);
+      if (prochain) {
+        const quand = decalage === 0 ? '' : decalage === 1 ? ' demain' : ` ${semaine[j].jour.toLowerCase()}`;
+        return { etat: 'ferme', texte: `Fermé · ouvre${quand} à ${enHeure(prochain[0])}`, jour };
+      }
+    }
+    return { etat: 'ferme', texte: 'Fermé', jour };
+  }
+
+  function mettreAJour() {
+    document.querySelectorAll<HTMLElement>('[data-statut]').forEach((el) => {
+      const { etat, texte, jour } = calculer(JSON.parse(el.dataset.horaires ?? '[]'));
+      el.dataset.etat = etat;
+      el.querySelector('.statut__texte')!.textContent = texte;
+      document.querySelectorAll(`[data-jour="${jour}"]`).forEach((ligne) => ligne.classList.add('aujourdhui'));
+    });
+  }
+
+  mettreAJour();
+  setInterval(mettreAJour, 60_000);
+</script>

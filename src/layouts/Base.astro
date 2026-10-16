@@ -1,0 +1,307 @@
+---
+import '@fontsource-variable/fraunces';
+import '@fontsource-variable/dm-sans';
+import '../styles/global.css';
+import { Image } from 'astro:assets';
+import Icone from '../components/Icone.astro';
+import lucane from '../assets/lucane.png';
+import { magasin } from '../data/magasin';
+import { lien } from '../data/lien';
+
+type Props = { titre: string; description: string };
+const { titre, description } = Astro.props;
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titre}</title>
+    <meta name="description" content={description} />
+    <!-- Maquette : ne pas indexer tant que le site n'est pas validé. -->
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#202020" />
+    <link rel="icon" type="image/png" href={lien('/favicon.png')} />
+  </head>
+  <body>
+    <div class="bandeau-maquette">
+      <div class="conteneur">Maquette · proposition de nouveau site pour BH 73</div>
+    </div>
+
+    <header class="entete">
+      <div class="conteneur entete__inner">
+        <a href={lien('/')} class="marque" aria-label="BH 73 Concept store, accueil">
+          <Image src={lucane} alt="" width={64} class="marque__lucane" loading="eager" />
+          <span class="marque__texte">
+            <span class="marque__nom">BH 73</span>
+            <span class="marque__sous">Concept store</span>
+          </span>
+        </a>
+        <nav class="nav" aria-label="Navigation principale">
+          <a href={lien('/#univers')}>Univers</a>
+          <a href={lien('/#en-ligne')}>Boutique en ligne</a>
+          <a href={lien('/#avis')}>Avis</a>
+          <a href={lien('/#infos')}>Infos pratiques</a>
+        </nav>
+        <a class="bouton bouton--or entete__appel" href={magasin.telephone.lien}>
+          <Icone nom="telephone" />
+          <span class="entete__appel-long">{magasin.telephone.affiche}</span>
+          <span class="entete__appel-court">Appeler</span>
+        </a>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="pied">
+      <div class="conteneur pied__grille">
+        <div>
+          <Image src={lucane} alt="" width={80} class="pied__lucane" />
+          <p class="pied__nom">BH 73 Concept store</p>
+          <p>{magasin.adresse.rue}<br />{magasin.adresse.ville}</p>
+        </div>
+        <div>
+          <p class="pied__titre">Contact</p>
+          <p><a href={magasin.telephone.lien}>{magasin.telephone.affiche}</a></p>
+          <p><a href={`mailto:${magasin.email}`}>{magasin.email}</a></p>
+        </div>
+        <div>
+          <p class="pied__titre">Suivre la boutique</p>
+          <p class="pied__reseaux">
+            <a href={magasin.instagram.url} aria-label="Instagram"><Icone nom="instagram" /></a>
+            <a href={magasin.facebook} aria-label="Facebook"><Icone nom="facebook" /></a>
+            <a href={magasin.boutiqueEnLigne} aria-label="Boutique en ligne"><Icone nom="sac" /></a>
+          </p>
+        </div>
+      </div>
+      <div class="conteneur pied__bas">
+        <span>© {new Date().getFullYear()} BH 73</span>
+        <a href="#">Mentions légales</a>
+        <a href="#">Confidentialité</a>
+      </div>
+    </footer>
+
+    <nav class="actions-mobile" aria-label="Actions rapides">
+      <a href={magasin.telephone.lien}><Icone nom="telephone" />Appeler</a>
+      <a href={magasin.itineraire}><Icone nom="itineraire" />Itinéraire</a>
+      <a href={magasin.instagram.url}><Icone nom="instagram" />Instagram</a>
+    </nav>
+  </body>
+</html>
+
+<style is:global>
+  .bandeau-maquette {
+    background: #fff3cd;
+    color: #6b4e00;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: center;
+    padding-block: 6px;
+  }
+
+  .entete {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--charbon);
+    color: #fff;
+    border-bottom: 1px solid rgb(189 129 15 / 0.25);
+  }
+
+  .entete__inner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 72px;
+  }
+
+  .marque {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .marque__lucane {
+    width: 42px;
+    height: auto;
+  }
+
+  .marque__texte {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .marque__nom {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--or);
+    letter-spacing: 0.01em;
+  }
+
+  .marque__sous {
+    margin-top: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--or-clair);
+  }
+
+  .nav {
+    display: none;
+    gap: 28px;
+    margin-left: auto;
+  }
+
+  .nav a {
+    color: rgb(255 255 255 / 0.82);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  .nav a:hover {
+    color: var(--or-clair);
+  }
+
+  .entete__appel {
+    margin-left: auto;
+    min-height: 42px;
+    padding: 10px 18px;
+  }
+
+  .entete__appel-long {
+    display: none;
+  }
+
+  @media (min-width: 960px) {
+    .nav {
+      display: flex;
+    }
+    .entete__appel {
+      margin-left: 8px;
+    }
+    .entete__appel-long {
+      display: inline;
+    }
+    .entete__appel-court {
+      display: none;
+    }
+  }
+
+  .pied {
+    background: var(--charbon);
+    color: rgb(255 255 255 / 0.75);
+    padding-top: 64px;
+    font-size: 0.95rem;
+  }
+
+  .pied a {
+    color: rgb(255 255 255 / 0.85);
+    text-decoration: none;
+  }
+
+  .pied a:hover {
+    color: var(--or-clair);
+  }
+
+  .pied__grille {
+    display: grid;
+    gap: 36px;
+  }
+
+  @media (min-width: 760px) {
+    .pied__grille {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+  }
+
+  .pied__lucane {
+    width: 52px;
+    margin-bottom: 14px;
+  }
+
+  .pied__nom {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    color: var(--or);
+    margin-bottom: 8px;
+  }
+
+  .pied__titre {
+    color: #fff;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .pied__reseaux {
+    display: flex;
+    gap: 14px;
+  }
+
+  .pied__reseaux svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .pied__bas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin-top: 48px;
+    padding-block: 24px;
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+    font-size: 0.85rem;
+  }
+
+  .actions-mobile {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: var(--charbon);
+    border-top: 1px solid rgb(189 129 15 / 0.35);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .actions-mobile a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .actions-mobile a:first-child {
+    color: var(--or-clair);
+  }
+
+  .actions-mobile svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 960px) {
+    .actions-mobile {
+      display: none;
+    }
+    body {
+      padding-bottom: 0;
+    }
+  }
+</style>
