@@ -1,0 +1,181 @@
+---
+import Icone from '../Icone.astro';
+import Statut from '../Statut.astro';
+import { magasin } from '../../data/magasin';
+import { horaires, horairesAConfirmer } from '../../data/horaires';
+
+const formatCreneaux = (creneaux: [string, string][]) =>
+  creneaux.length ? creneaux.map(([o, f]) => `${o.replace(':', ' h ')} – ${f.replace(':', ' h ')}`.replaceAll(' h 00', ' h')).join(' · ') : 'Fermé';
+
+// Lundi en premier pour l'affichage.
+const semaine = [...horaires.slice(1), horaires[0]].map((j) => ({ ...j, index: horaires.indexOf(j) }));
+---
+
+<!-- Infos pratiques -->
+<section class="section infos" id="infos">
+  <div class="conteneur infos__grille">
+    <div>
+      <p class="surtitre">Venir à la boutique</p>
+      <h2 class="titre-section">Infos pratiques</h2>
+      <Statut class="infos__statut" />
+
+      <dl class="infos__liste">
+        <div>
+          <dt><Icone nom="itineraire" />Adresse</dt>
+          <dd>{magasin.adresse.rue}, {magasin.adresse.ville}<br /><span class="discret">Parking devant le magasin, face au Lidl</span></dd>
+        </div>
+        <div>
+          <dt><Icone nom="telephone" />Téléphone</dt>
+          <dd><a href={magasin.telephone.lien}>{magasin.telephone.affiche}</a></dd>
+        </div>
+        <div>
+          <dt><Icone nom="email" />Email</dt>
+          <dd><a href={`mailto:${magasin.email}`}>{magasin.email}</a></dd>
+        </div>
+      </dl>
+
+      <h3 class="infos__sous-titre">
+        <Icone nom="horloge" />Horaires {horairesAConfirmer && <span class="a-confirmer">exemple à confirmer</span>}
+      </h3>
+      <table class="horaires">
+        <tbody>
+          {
+            semaine.map((j) => (
+              <tr data-jour={j.index}>
+                <th scope="row">{j.jour}</th>
+                <td>{formatCreneaux(j.creneaux)}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+
+      <div class="infos__actions">
+        <a class="bouton bouton--sombre" href={magasin.itineraire}><Icone nom="itineraire" />Itinéraire</a>
+        <a class="bouton bouton--contour" href={magasin.telephone.lien}><Icone nom="telephone" />Appeler</a>
+      </div>
+    </div>
+    <div class="infos__carte">
+      <iframe
+        src={magasin.carte}
+        title="Plan d'accès à BH 73, 381 rue de Bordeaux à Angoulême"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  /* Infos pratiques */
+  .infos {
+    background: var(--lin);
+  }
+
+  .infos__grille {
+    display: grid;
+    gap: 40px;
+  }
+
+  @media (min-width: 960px) {
+    .infos__grille {
+      grid-template-columns: 1fr 1.1fr;
+      gap: 64px;
+    }
+  }
+
+  .infos__statut {
+    margin-top: 18px;
+  }
+
+  .infos__liste {
+    display: grid;
+    gap: 16px;
+    margin: 28px 0 0;
+  }
+
+  .infos__liste dt,
+  .infos__sous-titre {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--or-fonce);
+  }
+
+  .infos__liste svg,
+  .infos__sous-titre svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .infos__liste dd {
+    margin: 4px 0 0;
+    font-size: 1.05rem;
+  }
+
+  .infos__liste a {
+    text-decoration-color: var(--or);
+    text-underline-offset: 3px;
+  }
+
+  .discret {
+    color: var(--discret);
+    font-size: 0.95rem;
+  }
+
+  .infos__sous-titre {
+    margin-top: 32px;
+    font-family: var(--sans);
+  }
+
+  .horaires {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+  }
+
+  .horaires th,
+  .horaires td {
+    padding: 9px 0;
+    border-bottom: 1px solid var(--trait);
+    text-align: left;
+    font-weight: 400;
+  }
+
+  .horaires td {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .horaires tr.aujourdhui th,
+  .horaires tr.aujourdhui td {
+    font-weight: 700;
+    color: var(--or-fonce);
+  }
+
+  .infos__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .infos__carte {
+    min-height: 380px;
+    border-radius: var(--rayon);
+    overflow: hidden;
+    box-shadow: var(--ombre);
+    background: var(--sable);
+  }
+
+  .infos__carte iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 380px;
+    border: 0;
+  }
+</style>

@@ -265,3 +265,28 @@ p {
 .chapo--clair {
   color: rgb(255 255 255 / 0.7);
 }
+
+/* Pastille : petite étiquette commune à toutes les sections (nouveau, pièce unique, ouvert…) */
+.pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--sable);
+  color: var(--texte);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.pastille--or {
+  background: var(--or);
+  color: var(--encre);
+}
+
+.pastille--sombre {
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+}

@@ -1,0 +1,80 @@
+---
+import { Image } from 'astro:assets';
+import Icone from '../Icone.astro';
+import { magasin, photos } from '../../data/magasin';
+
+const fil = [
+  photos.lampeCollage,
+  photos.sacCuirRouge,
+  photos.tableVannerie,
+  photos.ceramiqueVerte,
+  photos.echarpeCarree,
+  photos.commodeVases,
+];
+---
+
+<!-- Instagram -->
+<section class="section insta">
+  <div class="conteneur insta__grille">
+    <div class="insta__texte">
+      <p class="surtitre">Les arrivages</p>
+      <h2 class="titre-section">Les nouveautés passent d'abord sur Instagram</h2>
+      <p class="chapo">
+        Près de 5 000 personnes suivent les arrivages sur {magasin.instagram.compte}. Une pièce vous plaît ? Appelez la boutique pour savoir si elle est encore là.
+      </p>
+      <div class="insta__actions">
+        <a class="bouton bouton--sombre" href={magasin.instagram.url}><Icone nom="instagram" />Suivre {magasin.instagram.compte}</a>
+        <a class="bouton bouton--contour" href={magasin.telephone.lien}><Icone nom="telephone" />Réserver une pièce</a>
+      </div>
+    </div>
+    <a class="insta__mur" href={magasin.instagram.url} aria-label="Voir les publications sur Instagram">
+      {fil.map((p) => <Image src={p} alt="" widths={[240, 400]} sizes="(min-width: 960px) 200px, 33vw" />)}
+    </a>
+  </div>
+</section>
+
+<style is:global>
+  /* Instagram */
+  .insta {
+    background: var(--sable);
+  }
+
+  .insta__grille {
+    display: grid;
+    gap: 40px;
+    align-items: center;
+  }
+
+  @media (min-width: 960px) {
+    .insta__grille {
+      grid-template-columns: 1fr 1.1fr;
+      gap: 64px;
+    }
+  }
+
+  .insta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .insta__mur {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .insta__mur img {
+    aspect-ratio: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    transition: opacity 0.2s;
+  }
+
+  .insta__mur:hover img {
+    opacity: 0.85;
+  }
+</style>

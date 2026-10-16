@@ -1,0 +1,91 @@
+---
+import Icone from '../Icone.astro';
+import { magasin } from '../../data/magasin';
+import { avis as tousLesAvis } from '../../data/avis';
+
+const avis = tousLesAvis.slice(0, 4);
+---
+
+<!-- Avis -->
+<section class="section avis" id="avis">
+  <div class="conteneur">
+    <p class="surtitre">Ils sont passés</p>
+    <h2 class="titre-section">Ce qu'en disent les clients</h2>
+    <div class="avis__grille">
+      {
+        avis.map((a) => (
+          <figure class="avis__carte">
+            <div class="avis__etoiles" aria-label="5 étoiles sur 5">
+              {[1, 2, 3, 4, 5].map(() => (
+                <Icone nom="etoile" />
+              ))}
+            </div>
+            <blockquote>« {a.texte} »</blockquote>
+            <figcaption>{a.auteur} · avis Google</figcaption>
+          </figure>
+        ))
+      }
+    </div>
+    <a class="bouton bouton--contour avis__lien" href={magasin.avisGoogle}>Lire tous les avis sur Google <Icone nom="fleche" /></a>
+  </div>
+</section>
+
+<style is:global>
+  /* Avis */
+  .avis__grille {
+    display: grid;
+    gap: 18px;
+    margin-top: 40px;
+  }
+
+  @media (min-width: 760px) {
+    .avis__grille {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1100px) {
+    .avis__grille {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .avis__carte {
+    margin: 0;
+    padding: 26px;
+    border-radius: var(--rayon);
+    background: var(--lin);
+    border: 1px solid var(--trait);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .avis__etoiles {
+    display: flex;
+    gap: 2px;
+    color: var(--or);
+  }
+
+  .avis__etoiles svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .avis__carte blockquote {
+    margin: 16px 0 0;
+    font-family: var(--serif);
+    font-size: 1.12rem;
+    line-height: 1.45;
+  }
+
+  .avis__carte figcaption {
+    margin-top: auto;
+    padding-top: 18px;
+    font-size: 0.9rem;
+    color: var(--discret);
+  }
+
+  .avis__lien {
+    margin-top: 32px;
+  }
+</style>

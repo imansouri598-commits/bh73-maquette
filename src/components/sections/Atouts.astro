@@ -1,0 +1,86 @@
+---
+import Icone from '../Icone.astro';
+
+const atouts = [
+  { icone: 'parking', titre: 'Parking devant la porte', texte: 'On se gare sans chercher, face au Lidl.' },
+  { icone: 'livraison', titre: 'Livraison sur 20 km', texte: 'Le meuble repart chez vous, pas dans votre coffre.' },
+  { icone: 'vintage', titre: 'Seconde main & vintage', texte: 'Des pièces chinées, à côté du neuf.' },
+  { icone: 'etoile', titre: 'Recommandée sur Google', texte: 'L’accueil, le choix et les prix reviennent dans les avis.' },
+] as const;
+---
+
+<!-- Atouts -->
+<section class="atouts" aria-label="Les atouts de la boutique">
+  <div class="conteneur atouts__grille">
+    {
+      atouts.map((a) => (
+        <div class="atout">
+          <span class="atout__icone">
+            <Icone nom={a.icone} />
+          </span>
+          <div>
+            <p class="atout__titre">{a.titre}</p>
+            <p class="atout__texte">{a.texte}</p>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</section>
+
+<style is:global>
+  /* Atouts */
+  .atouts {
+    background: var(--charbon);
+    color: #fff;
+    padding-block: 28px;
+  }
+
+  .atouts__grille {
+    display: grid;
+    gap: 22px;
+  }
+
+  @media (min-width: 640px) {
+    .atouts__grille {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .atouts__grille {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .atout {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .atout__icone {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid rgb(189 129 15 / 0.5);
+    color: var(--or-clair);
+  }
+
+  .atout__icone svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .atout__titre {
+    font-weight: 600;
+  }
+
+  .atout__texte {
+    font-size: 0.92rem;
+    color: rgb(255 255 255 / 0.68);
+  }
+</style>

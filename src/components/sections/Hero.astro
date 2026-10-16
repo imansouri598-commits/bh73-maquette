@@ -1,0 +1,113 @@
+---
+import { getImage } from 'astro:assets';
+import Icone from '../Icone.astro';
+import Statut from '../Statut.astro';
+import { magasin, photos } from '../../data/magasin';
+
+// Photo d'accueil : cadrage vertical sur mobile, paysage au-delà.
+const heroMobile = await getImage({ src: photos.heroMobile, widths: [480, 768, 1080, 1536], format: 'webp' });
+const heroOrdinateur = await getImage({ src: photos.heroOrdinateur, widths: [960, 1440, 1920, 2752], format: 'webp' });
+---
+
+<!-- Accueil -->
+<section class="hero">
+  <picture>
+    <source media="(max-width: 699px)" srcset={heroMobile.srcSet.attribute} sizes="100vw" />
+    <source srcset={heroOrdinateur.srcSet.attribute} sizes="100vw" />
+    <img
+      src={heroOrdinateur.src}
+      alt="L'intérieur de la boutique BH 73 le soir : suspensions en fibres naturelles allumées, coussins, plantes et mobilier"
+      class="hero__photo"
+      width={photos.heroOrdinateur.width}
+      height={photos.heroOrdinateur.height}
+      loading="eager"
+      fetchpriority="high"
+    />
+  </picture>
+  <div class="hero__voile"></div>
+  <div class="conteneur hero__contenu">
+    <p class="hero__surtitre">Concept store · 381 rue de Bordeaux, Angoulême</p>
+    <h1 class="hero__titre">Déco, mobilier, mode et trouvailles de seconde main.</h1>
+    <p class="hero__texte">
+      Une sélection qui change au fil des arrivages, dans une boutique où l'on prend le temps de vous conseiller.
+    </p>
+    <Statut class="hero__statut" />
+    <div class="hero__actions">
+      <a class="bouton bouton--or" href={magasin.telephone.lien}><Icone nom="telephone" />Appeler la boutique</a>
+      <a class="bouton bouton--clair" href={magasin.itineraire}><Icone nom="itineraire" />Itinéraire</a>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  /* Accueil */
+  .hero {
+    position: relative;
+    isolation: isolate;
+    min-height: min(86svh, 760px);
+    display: flex;
+    align-items: flex-end;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .hero__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -2;
+  }
+
+  .hero__voile {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      linear-gradient(180deg, rgb(20 18 16 / 0.15) 0%, rgb(20 18 16 / 0.35) 40%, rgb(20 18 16 / 0.9) 100%),
+      linear-gradient(90deg, rgb(20 18 16 / 0.55) 0%, transparent 70%);
+  }
+
+  .hero__contenu {
+    padding-block: 120px 56px;
+  }
+
+  .hero__surtitre {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--or-clair);
+  }
+
+  .hero__titre {
+    margin-top: 16px;
+    max-width: 14ch;
+    font-size: clamp(2.6rem, 7vw, 5rem);
+    font-weight: 500;
+  }
+
+  .hero__texte {
+    margin-top: 18px;
+    max-width: 46ch;
+    font-size: 1.15rem;
+    color: rgb(255 255 255 / 0.88);
+  }
+
+  .hero__statut {
+    margin-top: 26px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgb(20 18 16 / 0.55);
+    backdrop-filter: blur(6px);
+    font-size: 0.95rem;
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 22px;
+  }
+</style>

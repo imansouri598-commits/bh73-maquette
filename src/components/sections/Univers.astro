@@ -1,0 +1,142 @@
+---
+import { Image } from 'astro:assets';
+import Icone from '../Icone.astro';
+import lucane from '../../assets/lucane.png';
+import { univers } from '../../data/univers';
+import { lien } from '../../data/lien';
+---
+
+<!-- Univers -->
+<section class="section" id="univers">
+  <div class="conteneur">
+    <p class="surtitre">En boutique</p>
+    <h2 class="titre-section">Six univers sous un même toit</h2>
+    <p class="chapo">Du neuf et du chiné, des petits prix et des pièces uniques. Chaque univers a sa page, avec ses photos et ses rayons.</p>
+
+    <div class="univers">
+      {
+        univers.map((u, i) => (
+          <a href={lien(`/univers/${u.slug}/`)} class:list={['carte', { 'carte--large': i === 0 }]}>
+            <div class="carte__media">
+              {u.photo ? (
+                <Image src={u.photo} alt="" widths={[400, 700, 1000]} sizes="(min-width: 960px) 40vw, 100vw" />
+              ) : (
+                <div class="carte__vide">
+                  <Image src={lucane} alt="" width={120} />
+                  <span>Photos à faire en boutique</span>
+                </div>
+              )}
+            </div>
+            <div class="carte__texte">
+              <h3>{u.titre}</h3>
+              <p>{u.accroche}</p>
+              <span class="carte__lien">
+                Découvrir <Icone nom="fleche" />
+              </span>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  /* Univers */
+  .univers {
+    display: grid;
+    gap: 18px;
+    margin-top: 44px;
+  }
+
+  @media (min-width: 640px) {
+    .univers {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .univers {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .carte--large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+  }
+
+  .carte {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 340px;
+    border-radius: var(--rayon);
+    overflow: hidden;
+    background: var(--encre);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: var(--ombre);
+  }
+
+  .carte__media {
+    position: absolute;
+    inset: 0;
+  }
+
+  .carte__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .carte:hover .carte__media img {
+    transform: scale(1.04);
+  }
+
+  .carte::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 40%, rgb(20 18 16 / 0.85) 100%);
+  }
+
+  .carte__texte {
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    padding: 22px;
+  }
+
+  .carte__texte h3 {
+    font-size: 1.6rem;
+  }
+
+  .carte--large .carte__texte h3 {
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+  }
+
+  .carte__texte p {
+    margin-top: 6px;
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  .carte__lien {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-weight: 600;
+    color: var(--or-clair);
+  }
+
+  .carte__lien svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s;
+  }
+
+  .carte:hover .carte__lien svg {
+    transform: translateX(4px);
+  }
+</style>
