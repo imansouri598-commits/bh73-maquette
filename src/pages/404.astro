@@ -1,0 +1,99 @@
+---
+// Page servie par GitHub Pages (dist/404.html) pour toute adresse inconnue, à n'importe quelle
+// profondeur : tous les liens passent donc par lien(), qui donne des chemins absolus.
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Icone from '../components/Icone.astro';
+import lucane from '../assets/lucane.png';
+import { univers } from '../data/univers';
+import { lien } from '../data/lien';
+---
+
+<Base
+  titre="Page introuvable · BH 73 Concept store, Angoulême"
+  description="Cette page n'existe pas ou plus. Retrouvez l'accueil, les univers et les horaires de BH 73 Concept store à Angoulême."
+>
+  <section class="section introuvable">
+    <div class="conteneur">
+      <Image src={lucane} alt="" width={160} class="introuvable__lucane" loading="eager" />
+      <p class="surtitre">Erreur 404</p>
+      <h1 class="titre-section introuvable__titre">Cette page est introuvable</h1>
+      <p class="chapo">Le lien est peut-être ancien ou incomplet. Reprenez depuis l'accueil ou choisissez un univers.</p>
+
+      <div class="introuvable__actions">
+        <a class="bouton bouton--sombre" href={lien('/')}>Revenir à l'accueil</a>
+        <a class="bouton bouton--contour" href={lien('/#infos')}><Icone nom="horloge" />Voir les horaires</a>
+      </div>
+
+      <h2 class="introuvable__sous-titre">Les univers de la boutique</h2>
+      <ul class="introuvable__univers">
+        {
+          univers.map((u) => (
+            <li>
+              <a href={lien(`/univers/${u.slug}/`)}>
+                {u.titre}
+                <Icone nom="fleche" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style is:global>
+  .introuvable__lucane {
+    width: 80px;
+    height: auto;
+    margin-bottom: 24px;
+  }
+
+  .introuvable__titre {
+    max-width: 18ch;
+  }
+
+  .introuvable__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .introuvable__sous-titre {
+    margin-top: 48px;
+    font-size: 1.35rem;
+  }
+
+  .introuvable__univers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .introuvable__univers a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--trait);
+    background: var(--lin);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .introuvable__univers a:hover {
+    border-color: var(--texte);
+  }
+
+  .introuvable__univers svg {
+    width: 16px;
+    height: 16px;
+    color: var(--or-fonce);
+  }
+</style>

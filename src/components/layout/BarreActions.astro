@@ -1,0 +1,84 @@
+---
+import Icone from '../Icone.astro';
+import { magasin } from '../../data/magasin';
+
+// Téléphone et tablette : les trois gestes utiles pour un magasin physique, toujours à portée de pouce.
+// Appeler (action principale, en or), venir (Itinéraire) et voir les arrivages (Instagram).
+---
+
+<nav class="actions-mobile" aria-label="Actions rapides">
+  <a class="actions-mobile__appel" href={magasin.telephone.lien} aria-label={`Appeler la boutique au ${magasin.telephone.affiche}`}>
+    <Icone nom="telephone" />
+    <span>Appeler</span>
+  </a>
+  <a href={magasin.itineraire} aria-label="Itinéraire vers la boutique sur Google Maps">
+    <Icone nom="itineraire" />
+    <span>Itinéraire</span>
+  </a>
+  <a href={magasin.instagram.url} aria-label="Instagram : voir les arrivages">
+    <Icone nom="instagram" />
+    <span>Instagram</span>
+  </a>
+</nav>
+
+<style is:global>
+  /* Hauteur de la barre : 6 + 52 + 6 px + 1 px de filet. Le corps de page réserve la même place
+     (plus la zone du geste d'accueil sur iPhone) pour que la barre ne masque jamais la fin de la page. */
+  .actions-mobile {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 30;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    background: var(--charbon);
+    border-top: 1px solid rgb(189 129 15 / 0.35);
+  }
+
+  .actions-mobile a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 52px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.1;
+    text-decoration: none;
+  }
+
+  .actions-mobile a:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+
+  .actions-mobile .actions-mobile__appel {
+    background: var(--or);
+    color: var(--encre);
+  }
+
+  .actions-mobile .actions-mobile__appel:hover {
+    background: var(--or-clair);
+  }
+
+  .actions-mobile svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  body {
+    padding-bottom: calc(65px + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 960px) {
+    .actions-mobile {
+      display: none;
+    }
+    body {
+      padding-bottom: 0;
+    }
+  }
+</style>

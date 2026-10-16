@@ -1,0 +1,426 @@
+---
+import { Image } from 'astro:assets';
+import Icone from '../Icone.astro';
+import Statut from '../Statut.astro';
+import lucane from '../../assets/lucane.png';
+import { magasin } from '../../data/magasin';
+import { univers } from '../../data/univers';
+import { lien } from '../../data/lien';
+
+// Page courante (normalisée avec une barre finale) : sert à indiquer au visiteur où il se trouve.
+const chemin = Astro.url.pathname.replace(/\/?$/, '/');
+const estAccueil = chemin === lien('/');
+const dansUnivers = chemin.startsWith(lien('/univers/'));
+
+// Mêmes rubriques, dans le même ordre que les sections de l'accueil.
+const rubriques = [
+  { href: lien('/#univers'), texte: 'Univers', courant: dansUnivers },
+  { href: lien('/#en-ligne'), texte: 'Boutique en ligne', courant: false },
+  { href: lien('/#avis'), texte: 'Avis clients', courant: false },
+  { href: lien('/#infos'), texte: 'Horaires & accès', courant: false },
+];
+---
+
+<header class="entete">
+  <div class="conteneur entete__inner">
+    <a href={lien('/')} class="marque" aria-label="BH 73 Concept store, accueil" aria-current={estAccueil ? 'page' : undefined}>
+      <Image src={lucane} alt="" width={64} class="marque__lucane" loading="eager" />
+      <span class="marque__texte">
+        <span class="marque__nom">BH 73</span>
+        <span class="marque__sous">Concept store</span>
+      </span>
+    </a>
+
+    {/* Ordinateur : rubriques toujours visibles et numéro de la boutique. */}
+    <nav class="nav" aria-label="Navigation principale">
+      {rubriques.map((r) => (
+        <a href={r.href} aria-current={r.courant ? 'true' : undefined}>
+          {r.texte}
+        </a>
+      ))}
+    </nav>
+    <a class="bouton bouton--or entete__appel" href={magasin.telephone.lien} aria-label={`Appeler la boutique au ${magasin.telephone.affiche}`}>
+      <Icone nom="telephone" />
+      {magasin.telephone.affiche}
+    </a>
+
+    {/* Téléphone et tablette : bouton Menu. <details> s'ouvre et se ferme même sans JavaScript ;
+        Appeler, Itinéraire et Instagram restent dans la barre fixe en bas de l'écran. */}
+    <details class="menu" data-menu>
+      <summary class="bouton bouton--clair menu__bouton">
+        <svg class="menu__icone menu__icone--ouvrir" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 7h16M4 12h16M4 17h16"></path>
+        </svg>
+        <svg class="menu__icone menu__icone--fermer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+        <span class="menu__libelle menu__libelle--ouvrir">Menu</span>
+        <span class="menu__libelle menu__libelle--fermer">Fermer</span>
+      </summary>
+
+      <div class="menu__panneau">
+        <nav class="conteneur" aria-label="Navigation principale">
+          <p class="surtitre surtitre--clair" id="menu-univers">Les univers</p>
+          <ul class="menu__univers" aria-labelledby="menu-univers">
+            {
+              univers.map((u) => {
+                const href = lien(`/univers/${u.slug}/`);
+                return (
+                  <li>
+                    <a href={href} aria-current={chemin === href ? 'page' : undefined}>
+                      {u.titre}
+                    </a>
+                  </li>
+                );
+              })
+            }
+          </ul>
+
+          <ul class="menu__rubriques">
+            <li>
+              <a href={lien('/#en-ligne')}>
+                <Icone nom="sac" />
+                <span class="menu__texte">Boutique en ligne</span>
+                <Icone nom="fleche" class="menu__fleche" />
+              </a>
+            </li>
+            <li>
+              <a href={lien('/#avis')}>
+                <Icone nom="etoile" />
+                <span class="menu__texte">Avis clients</span>
+                <Icone nom="fleche" class="menu__fleche" />
+              </a>
+            </li>
+            <li>
+              <a href={lien('/#infos')}>
+                <Icone nom="horloge" />
+                <span class="menu__texte">
+                  Horaires & accès
+                  <Statut class="menu__statut" />
+                </span>
+                <Icone nom="fleche" class="menu__fleche" />
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </details>
+  </div>
+</header>
+<div class="menu-voile" data-menu-voile hidden></div>
+
+<script>
+  // Confort du menu mobile (il fonctionne déjà sans ce script) : il se referme quand on choisit
+  // un lien, avec la touche Échap, en touchant la page autour, ou si l'écran passe en format ordinateur.
+  const menu = document.querySelector<HTMLDetailsElement>('[data-menu]');
+  const voile = document.querySelector<HTMLElement>('[data-menu-voile]');
+
+  if (menu) {
+    const fermer = (rendreLeFocus = false) => {
+      if (!menu.open) return;
+      menu.open = false;
+      if (rendreLeFocus) menu.querySelector('summary')?.focus();
+    };
+
+    menu.addEventListener('toggle', () => {
+      if (voile) voile.hidden = !menu.open;
+    });
+    menu.querySelectorAll('.menu__panneau a').forEach((a) => a.addEventListener('click', () => fermer()));
+    voile?.addEventListener('click', () => fermer());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') fermer(true);
+    });
+    window.matchMedia('(min-width: 960px)').addEventListener('change', (e) => {
+      if (e.matches) fermer();
+    });
+  }
+</script>
+
+<style is:global>
+  .entete {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--charbon);
+    color: #fff;
+    border-bottom: 1px solid rgb(189 129 15 / 0.25);
+  }
+
+  .entete__inner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 64px;
+  }
+
+  .marque {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    text-decoration: none;
+  }
+
+  .marque__lucane {
+    width: 42px;
+    height: auto;
+  }
+
+  .marque__texte {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .marque__nom {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.6rem;
+    color: var(--or);
+    letter-spacing: 0.01em;
+  }
+
+  .marque__sous {
+    margin-top: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--or-clair);
+  }
+
+  /* Rubriques (ordinateur) */
+  .nav,
+  .entete__appel {
+    display: none;
+  }
+
+  .nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: 10px;
+    white-space: nowrap;
+    color: rgb(255 255 255 / 0.82);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 8px;
+  }
+
+  .nav a:hover {
+    color: var(--or-clair);
+  }
+
+  /* Page univers : la rubrique « Univers » est soulignée d'or. */
+  .nav a[aria-current] {
+    color: #fff;
+    text-decoration-line: underline;
+    text-decoration-color: var(--or);
+  }
+
+  .entete__appel {
+    min-height: 44px;
+    padding: 10px 18px;
+    white-space: nowrap;
+  }
+
+  @media (min-width: 960px) {
+    .entete__inner {
+      gap: 20px;
+      min-height: 72px;
+    }
+    .nav {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+    .entete__appel {
+      display: inline-flex;
+    }
+  }
+
+  /* Menu (téléphone et tablette) */
+  .menu {
+    margin-left: auto;
+  }
+
+  .menu__bouton {
+    min-height: 44px;
+    padding: 8px 16px;
+    list-style: none;
+    user-select: none;
+  }
+
+  .menu__bouton::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu__bouton .menu__icone {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menu__icone--fermer,
+  .menu__libelle--fermer,
+  .menu[open] .menu__icone--ouvrir,
+  .menu[open] .menu__libelle--ouvrir {
+    display: none;
+  }
+
+  .menu[open] .menu__icone--fermer,
+  .menu[open] .menu__libelle--fermer {
+    display: inline;
+  }
+
+  .menu[open] .menu__bouton {
+    background: rgb(255 255 255 / 0.1);
+    border-color: #fff;
+  }
+
+  .menu__panneau {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: calc(100vh - 170px);
+    max-height: calc(100dvh - 170px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 22px 26px;
+    background: var(--charbon);
+    border-top: 1px solid rgb(189 129 15 / 0.25);
+    border-bottom: 1px solid rgb(189 129 15 / 0.35);
+    box-shadow: var(--ombre);
+  }
+
+  .menu__univers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .menu__univers a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    min-height: 52px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgb(255 255 255 / 0.14);
+    background: rgb(255 255 255 / 0.04);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+
+  .menu__univers a:hover {
+    border-color: var(--or-clair);
+  }
+
+  .menu__univers a[aria-current='page'] {
+    border-color: var(--or);
+    background: rgb(189 129 15 / 0.14);
+    color: var(--or-clair);
+  }
+
+  .menu__rubriques {
+    margin: 20px 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+  }
+
+  .menu__rubriques li {
+    border-bottom: 1px solid rgb(255 255 255 / 0.12);
+  }
+
+  .menu__rubriques a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 56px;
+    padding-block: 8px;
+    color: #fff;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .menu__rubriques svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    color: var(--or-clair);
+  }
+
+  .menu__rubriques .menu__fleche {
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    color: rgb(255 255 255 / 0.45);
+  }
+
+  .menu__texte {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .menu__statut {
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: rgb(255 255 255 / 0.75);
+  }
+
+  .menu-voile {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    background: rgb(20 18 16 / 0.55);
+  }
+
+  .menu-voile[hidden] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .menu[open] .menu__panneau {
+      animation: menu-apparition 0.18s ease-out;
+    }
+  }
+
+  @keyframes menu-apparition {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .menu,
+    .menu-voile {
+      display: none;
+    }
+  }
+
+  /* Très petits téléphones (320 px) : on resserre pour que le logo et « Menu » tiennent sur une ligne. */
+  @media (max-width: 359px) {
+    .entete__inner,
+    .marque {
+      gap: 10px;
+    }
+    .marque__lucane {
+      width: 34px;
+    }
+    .menu__bouton {
+      padding-inline: 12px;
+    }
+  }
+</style>

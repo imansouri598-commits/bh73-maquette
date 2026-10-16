@@ -1,0 +1,307 @@
+---
+import { Image } from 'astro:assets';
+import Icone from '../Icone.astro';
+import Statut from '../Statut.astro';
+import lucane from '../../assets/lucane.png';
+import { magasin, preuves } from '../../data/magasin';
+import { horaires, horairesAConfirmer } from '../../data/horaires';
+import { univers } from '../../data/univers';
+import { lien } from '../../data/lien';
+
+const chemin = Astro.url.pathname.replace(/\/?$/, '/');
+const estAccueil = chemin === lien('/');
+
+// --- Horaires résumés, calculés au build depuis data/horaires.ts (index 0 = dimanche) ---
+// Règle : on regroupe les jours qui ont exactement les mêmes créneaux. Un groupe qui forme une suite
+// continue dans la semaine (vue comme un cycle : dimanche puis lundi) s'écrit « du mardi au samedi »
+// s'il compte 3 jours ou plus, « dimanche et lundi » s'il en compte 2 ; sinon les jours sont énumérés,
+// lundi en tête. Jours d'ouverture d'abord, jours de fermeture à la fin.
+const nomJour = (i: number) => horaires[i].jour.toLowerCase();
+const heure = (hhmm: string) => {
+  const [h, m] = hhmm.split(':');
+  return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`;
+};
+const lundiDabord = (i: number) => (i + 6) % 7;
+
+function joursTexte(jours: number[]) {
+  const n = jours.length;
+  if (n === 7) return 'tous les jours';
+  const suite = (debut: number) => Array.from({ length: n }, (_, k) => (debut + k) % 7);
+  const debut = jours.find((d) => suite(d).every((j) => jours.includes(j)));
+  if (debut !== undefined && n >= 3) return `du ${nomJour(debut)} au ${nomJour((debut + n - 1) % 7)}`;
+  const ordre = debut !== undefined ? suite(debut) : [...jours].sort((a, b) => lundiDabord(a) - lundiDabord(b));
+  const noms = ordre.map(nomJour);
+  return n > 1 ? `${noms.slice(0, -1).join(', ')} et ${noms[n - 1]}` : noms[0];
+}
+
+const groupes = new Map<string, number[]>();
+horaires.forEach((j, i) => {
+  const cle = JSON.stringify(j.creneaux);
+  groupes.set(cle, [...(groupes.get(cle) ?? []), i]);
+});
+
+const lignesHoraires = [...groupes.values()]
+  .map((jours) => ({ jours, creneaux: horaires[jours[0]].creneaux }))
+  .sort((a, b) => Number(!a.creneaux.length) - Number(!b.creneaux.length) || lundiDabord(a.jours[0]) - lundiDabord(b.jours[0]))
+  .map(({ jours, creneaux }) => {
+    const texte = joursTexte(jours);
+    return creneaux.length
+      ? { jours: texte.charAt(0).toUpperCase() + texte.slice(1), heures: creneaux.map(([o, f]) => `${heure(o)} – ${heure(f)}`).join(' et ') }
+      : { jours: `Fermé ${texte}`, heures: '' };
+  });
+
+// --- Preuve sociale : abonnés Instagram relevés (preuves.instagram, magasin.ts) ---
+// Règle : arrondi au millier le plus proche ; « près de » si le chiffre réel est en dessous,
+// « plus de » s'il est au-dessus (4 978 → « près de 5 000 »). Sous 1 000, le chiffre exact.
+const { abonnes } = preuves.instagram;
+const arrondi = Math.round(abonnes / 1000) * 1000;
+const nombre = new Intl.NumberFormat('fr-FR');
+const abonnesTexte =
+  abonnes < 1000
+    ? `${nombre.format(abonnes)} abonnés`
+    : `${abonnes < arrondi ? 'près de ' : abonnes > arrondi ? 'plus de ' : ''}${nombre.format(arrondi)} abonnés`;
+---
+
+<footer class="pied">
+  <div class="conteneur">
+    <div class="pied__grille">
+      <div class="pied__bloc">
+        <Image src={lucane} alt="" width={80} class="pied__lucane" />
+        <p class="pied__nom">BH 73 Concept store</p>
+        <p class="pied__accroche">Déco, mobilier, vaisselle, mode, bijoux et seconde main.</p>
+        <address class="pied__adresse">
+          {magasin.adresse.rue}<br />{magasin.adresse.ville}
+          <span class="pied__discret">Parking devant le magasin, face au Lidl.</span>
+        </address>
+        <ul class="pied__liens">
+          <li><a href={magasin.itineraire}><Icone nom="itineraire" />Itinéraire</a></li>
+          <li><a href={magasin.telephone.lien}><Icone nom="telephone" />{magasin.telephone.affiche}</a></li>
+          <li><a href={`mailto:${magasin.email}`}><Icone nom="email" />{magasin.email}</a></li>
+        </ul>
+      </div>
+
+      <div class="pied__bloc">
+        <h2 class="surtitre surtitre--clair pied__titre">
+          Horaires {horairesAConfirmer && <span class="a-confirmer">à confirmer</span>}
+        </h2>
+        <ul class="pied__horaires">
+          {
+            lignesHoraires.map((l) => (
+              <li>
+                <span>{l.jours}</span>
+                {l.heures && <strong>{l.heures}</strong>}
+              </li>
+            ))
+          }
+        </ul>
+        {/* Sur l'accueil, la section Infos juste au-dessus affiche déjà l'état en direct. */}
+        {!estAccueil && <Statut class="pied__statut" />}
+      </div>
+
+      <nav class="pied__bloc" aria-labelledby="pied-univers">
+        <h2 class="surtitre surtitre--clair pied__titre" id="pied-univers">Les univers</h2>
+        <ul class="pied__liens pied__liens--univers">
+          {
+            univers.map((u) => {
+              const href = lien(`/univers/${u.slug}/`);
+              return (
+                <li>
+                  <a href={href} aria-current={chemin === href ? 'page' : undefined}>
+                    {u.titre}
+                  </a>
+                </li>
+              );
+            })
+          }
+        </ul>
+      </nav>
+
+      <div class="pied__bloc">
+        <h2 class="surtitre surtitre--clair pied__titre">En ligne</h2>
+        <ul class="pied__liens">
+          <li>
+            <a href={magasin.instagram.url}>
+              <Icone nom="instagram" />
+              <span class="pied__double">
+                Instagram
+                <span class="pied__preuve">{abonnesTexte.charAt(0).toUpperCase() + abonnesTexte.slice(1)}</span>
+              </span>
+            </a>
+          </li>
+          <li><a href={magasin.facebook}><Icone nom="facebook" />Facebook</a></li>
+          <li><a href={magasin.boutiqueEnLigne}><Icone nom="sac" />Boutique en ligne</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pied__bas">
+      <p>© {new Date().getFullYear()} BH 73 Concept store, Angoulême</p>
+      <p>Mentions légales et confidentialité : <span class="a-confirmer">à rédiger avec la boutique</span></p>
+    </div>
+  </div>
+</footer>
+
+<style is:global>
+  .pied {
+    background: var(--charbon);
+    color: rgb(255 255 255 / 0.75);
+    padding-top: clamp(48px, 7vw, 72px);
+    font-size: 0.95rem;
+  }
+
+  .pied a {
+    color: rgb(255 255 255 / 0.9);
+    text-decoration: none;
+  }
+
+  .pied a:hover {
+    color: var(--or-clair);
+  }
+
+  .pied__grille {
+    display: grid;
+    gap: 32px;
+  }
+
+  @media (min-width: 640px) {
+    .pied__grille {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .pied__grille {
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+    }
+  }
+
+  .pied__lucane {
+    width: 52px;
+    margin-bottom: 14px;
+  }
+
+  .pied__nom {
+    font-family: var(--serif);
+    font-size: 1.3rem;
+    color: var(--or);
+  }
+
+  .pied__accroche {
+    margin-top: 4px;
+  }
+
+  .pied__adresse {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+    font-style: normal;
+    color: #fff;
+  }
+
+  .pied__discret {
+    margin-top: 2px;
+    font-size: 0.875rem;
+    color: rgb(255 255 255 / 0.62);
+  }
+
+  .pied__titre {
+    margin-bottom: 8px;
+    font-family: var(--sans);
+  }
+
+  .pied__liens {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pied__titre + .pied__liens {
+    margin-top: 0;
+  }
+
+  .pied__liens a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding-block: 4px;
+    line-height: 1.3;
+  }
+
+  .pied__liens svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--or-clair);
+  }
+
+  .pied__liens a[aria-current='page'] {
+    color: var(--or-clair);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+
+  /* Univers sur deux colonnes au téléphone, en liste au-delà. */
+  .pied__liens--univers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 16px;
+  }
+
+  @media (min-width: 640px) {
+    .pied__liens--univers {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pied__double {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .pied__preuve {
+    font-size: 0.85rem;
+    color: rgb(255 255 255 / 0.62);
+  }
+
+  .pied__horaires {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pied__horaires li {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    column-gap: 12px;
+    padding-block: 8px;
+    border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  }
+
+  .pied__horaires strong {
+    font-weight: 600;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pied__statut {
+    margin-top: 14px;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #fff;
+  }
+
+  .pied__bas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 24px;
+    margin-top: 48px;
+    padding-block: 24px;
+    border-top: 1px solid rgb(255 255 255 / 0.12);
+    font-size: 0.85rem;
+    color: rgb(255 255 255 / 0.62);
+  }
+</style>
