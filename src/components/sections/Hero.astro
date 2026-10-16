@@ -109,6 +109,8 @@ const ville = magasin.adresse.ville.replace(/^\d+\s*/, '');
   .hero .hero__statut {
     margin-top: 24px;
     gap: 10px;
+    /* Rayon fixe : la pastille reste ronde sur une ligne et ne se déforme pas si le texte de repli passe sur deux. */
+    border-radius: 20px;
     padding: 8px 15px;
     border: 1px solid rgb(255 255 255 / 0.2);
     font-size: 0.95rem;

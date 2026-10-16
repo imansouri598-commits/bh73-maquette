@@ -15,7 +15,7 @@ const { u, variante = 'mosaique', large = false } = Astro.props;
 // Étiquettes : uniquement des faits vérifiés, portés par data/univers.ts.
 const pastilles = [
   u.piecesUniques && { texte: 'Pièces uniques', or: true },
-  u.livraison && { texte: 'Livraison sur 20 km', or: false },
+  u.livraison && { texte: 'Livraison jusqu’à 20 km', or: false },
   u.enLigne && { texte: 'Aussi en ligne', or: false },
 ].filter((p): p is { texte: string; or: boolean } => Boolean(p));
 

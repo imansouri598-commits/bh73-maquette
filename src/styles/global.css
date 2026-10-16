@@ -251,7 +251,6 @@ p {
 }
 
 .carte__vide img,
-.carte__media .carte__vide img,
 .u-hero__media .carte__vide img {
   width: 72px;
   height: auto;
