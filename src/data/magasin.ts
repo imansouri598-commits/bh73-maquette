@@ -13,6 +13,8 @@ import sacCuirNoir from '../assets/photos/sac-cuir-noir.jpg';
 import echarpeCarree from '../assets/photos/echarpe-carree.jpg';
 import trousseVoglioBene from '../assets/photos/trousse-voglio-bene.jpg';
 import cagoule from '../assets/photos/cagoule.jpg';
+import heroOrdinateur from '../assets/photos/hero-ordinateur.jpg';
+import heroMobile from '../assets/photos/hero-mobile.jpg';
 
 export const photos = {
   boutiqueInterieur,
@@ -29,6 +31,8 @@ export const photos = {
   echarpeCarree,
   trousseVoglioBene,
   cagoule,
+  heroOrdinateur,
+  heroMobile,
 };
 
 const adresseRecherche = 'BH 73, 381 Rue de Bordeaux, 16000 Angoulême';

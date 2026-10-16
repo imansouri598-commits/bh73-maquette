@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 import Icone from '../components/Icone.astro';
 import Statut from '../components/Statut.astro';
@@ -9,6 +9,10 @@ import { produitsEnLigne } from '../data/boutique';
 import { lien } from '../data/lien';
 
 const produits = await produitsEnLigne(4);
+
+// Photo d'accueil : cadrage vertical sur mobile, paysage au-delà.
+const heroMobile = await getImage({ src: photos.heroMobile, widths: [480, 768, 1080, 1536], format: 'webp' });
+const heroOrdinateur = await getImage({ src: photos.heroOrdinateur, widths: [960, 1440, 1920, 2752], format: 'webp' });
 
 const atouts = [
   { icone: 'parking', titre: 'Parking devant la porte', texte: 'On se gare sans chercher, face au Lidl.' },
@@ -39,15 +43,19 @@ const semaine = [...horaires.slice(1), horaires[0]].map((j) => ({ ...j, index: h
 >
   <!-- Accueil -->
   <section class="hero">
-    <Image
-      src={photos.boutiqueInterieur}
-      alt="L'intérieur de la boutique BH 73 : suspensions en fibres naturelles, coussins, plantes et mobilier"
-      class="hero__photo"
-      widths={[640, 960, 1360]}
-      sizes="100vw"
-      loading="eager"
-      fetchpriority="high"
-    />
+    <picture>
+      <source media="(max-width: 699px)" srcset={heroMobile.srcSet.attribute} sizes="100vw" />
+      <source srcset={heroOrdinateur.srcSet.attribute} sizes="100vw" />
+      <img
+        src={heroOrdinateur.src}
+        alt="L'intérieur de la boutique BH 73 le soir : suspensions en fibres naturelles allumées, coussins, plantes et mobilier"
+        class="hero__photo"
+        width={photos.heroOrdinateur.width}
+        height={photos.heroOrdinateur.height}
+        loading="eager"
+        fetchpriority="high"
+      />
+    </picture>
     <div class="hero__voile"></div>
     <div class="conteneur hero__contenu">
       <p class="hero__surtitre">Concept store · 381 rue de Bordeaux, Angoulême</p>
