@@ -51,16 +51,16 @@ export const magasin = {
   avisGoogle: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent('BH 73 concept store Angoulême')}`,
 };
 
-// Horaires d'exemple : à remplacer par les vrais avant la mise en ligne.
+// Horaires relevés sur la fiche Google le 16/10/2026.
 // Index 0 = dimanche, comme Date.getDay(). Chaque créneau : [ouverture, fermeture] en "HH:MM".
-export const horairesAConfirmer = true;
+export const horairesAConfirmer = false;
 export const horaires: { jour: string; creneaux: [string, string][] }[] = [
   { jour: 'Dimanche', creneaux: [] },
   { jour: 'Lundi', creneaux: [] },
-  { jour: 'Mardi', creneaux: [['10:00', '12:30'], ['14:00', '19:00']] },
-  { jour: 'Mercredi', creneaux: [['10:00', '12:30'], ['14:00', '19:00']] },
-  { jour: 'Jeudi', creneaux: [['10:00', '12:30'], ['14:00', '19:00']] },
-  { jour: 'Vendredi', creneaux: [['10:00', '12:30'], ['14:00', '19:00']] },
+  { jour: 'Mardi', creneaux: [['10:00', '19:00']] },
+  { jour: 'Mercredi', creneaux: [['10:00', '19:00']] },
+  { jour: 'Jeudi', creneaux: [['10:00', '19:00']] },
+  { jour: 'Vendredi', creneaux: [['10:00', '19:00']] },
   { jour: 'Samedi', creneaux: [['10:00', '19:00']] },
 ];
 
