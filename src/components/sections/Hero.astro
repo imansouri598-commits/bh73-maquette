@@ -7,10 +7,13 @@ import { magasin, photos } from '../../data/magasin';
 // Photo d'accueil : cadrage vertical sur mobile, paysage au-delà.
 const heroMobile = await getImage({ src: photos.heroMobile, widths: [480, 768, 1080, 1536], format: 'webp' });
 const heroOrdinateur = await getImage({ src: photos.heroOrdinateur, widths: [960, 1440, 1920, 2752], format: 'webp' });
+
+// Surtitre : l'adresse seule (« Concept store » figure déjà sous le logo, juste au-dessus).
+const ville = magasin.adresse.ville.replace(/^\d+\s*/, '');
 ---
 
-<!-- Accueil -->
-<section class="hero">
+<!-- Accueil : en un coup d'œil, ce qu'est la boutique, où elle est, si elle est ouverte, comment appeler ou venir. -->
+<section class="hero" aria-labelledby="hero-titre">
   <picture>
     <source media="(max-width: 699px)" srcset={heroMobile.srcSet.attribute} sizes="100vw" />
     <source srcset={heroOrdinateur.srcSet.attribute} sizes="100vw" />
@@ -26,15 +29,17 @@ const heroOrdinateur = await getImage({ src: photos.heroOrdinateur, widths: [960
   </picture>
   <div class="hero__voile"></div>
   <div class="conteneur hero__contenu">
-    <p class="hero__surtitre">Concept store · 381 rue de Bordeaux, Angoulême</p>
-    <h1 class="hero__titre">Déco, mobilier, mode et trouvailles de seconde main.</h1>
-    <p class="hero__texte">
-      Une sélection qui change au fil des arrivages, dans une boutique où l'on prend le temps de vous conseiller.
-    </p>
-    <Statut class="hero__statut" />
+    <p class="surtitre surtitre--clair hero__surtitre">{magasin.adresse.rue} · {ville}</p>
+    <h1 class="hero__titre" id="hero-titre">Déco, mobilier, mode et trouvailles de seconde main.</h1>
+    <p class="hero__texte">La sélection change au fil des arrivages.<br />On prend le temps de vous conseiller.</p>
+    <Statut class="pastille pastille--sombre hero__statut" />
     <div class="hero__actions">
-      <a class="bouton bouton--or" href={magasin.telephone.lien}><Icone nom="telephone" />Appeler la boutique</a>
-      <a class="bouton bouton--clair" href={magasin.itineraire}><Icone nom="itineraire" />Itinéraire</a>
+      <a class="bouton bouton--or" href={magasin.telephone.lien}>
+        <Icone nom="telephone" /><span>Appeler<span class="hero__complement"> la boutique</span></span>
+      </a>
+      <a class="bouton bouton--clair" href={magasin.itineraire}>
+        <Icone nom="itineraire" /><span>Itinéraire<span class="visuellement-cache"> jusqu'à la boutique</span></span>
+      </a>
     </div>
   </div>
 </section>
@@ -60,54 +65,146 @@ const heroOrdinateur = await getImage({ src: photos.heroOrdinateur, widths: [960
     z-index: -2;
   }
 
+  /* Voile couleur --encre (26 23 20) : il assombrit le bas et la gauche, là où se trouve le texte,
+     et laisse le haut de la photo lumineux. */
   .hero__voile {
     position: absolute;
     inset: 0;
     z-index: -1;
     background:
-      linear-gradient(180deg, rgb(20 18 16 / 0.15) 0%, rgb(20 18 16 / 0.35) 40%, rgb(20 18 16 / 0.9) 100%),
-      linear-gradient(90deg, rgb(20 18 16 / 0.55) 0%, transparent 70%);
+      linear-gradient(180deg, rgb(26 23 20 / 0.1) 0%, rgb(26 23 20 / 0.32) 38%, rgb(26 23 20 / 0.9) 100%),
+      linear-gradient(90deg, rgb(26 23 20 / 0.74) 0%, rgb(26 23 20 / 0.52) 40%, rgb(26 23 20 / 0.12) 62%, transparent 76%);
   }
 
   .hero__contenu {
+    position: relative;
     padding-block: 120px 56px;
   }
 
-  .hero__surtitre {
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--or-clair);
+  /* Le surtitre reprend la classe commune .surtitre ; une ombre douce le détache des suspensions allumées. */
+  .hero .hero__surtitre {
+    font-size: 0.875rem;
+    text-shadow:
+      0 1px 2px rgb(26 23 20 / 0.85),
+      0 0 14px rgb(26 23 20 / 0.8);
   }
 
   .hero__titre {
-    margin-top: 16px;
+    margin-top: 14px;
     max-width: 14ch;
     font-size: clamp(2.6rem, 7vw, 5rem);
     font-weight: 500;
+    text-shadow: 0 2px 20px rgb(26 23 20 / 0.5);
   }
 
   .hero__texte {
     margin-top: 18px;
     max-width: 46ch;
     font-size: 1.15rem;
-    color: rgb(255 255 255 / 0.88);
+    color: rgb(255 255 255 / 0.9);
+    text-shadow: 0 1px 12px rgb(26 23 20 / 0.6);
   }
 
-  .hero__statut {
-    margin-top: 26px;
-    padding: 8px 14px;
-    border-radius: 999px;
-    background: rgb(20 18 16 / 0.55);
-    backdrop-filter: blur(6px);
+  /* Badge horaire (composant Statut) : pastille sombre commune, à la taille du texte courant. */
+  .hero .hero__statut {
+    margin-top: 24px;
+    gap: 10px;
+    padding: 8px 15px;
+    border: 1px solid rgb(255 255 255 / 0.2);
     font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    backdrop-filter: blur(6px);
   }
 
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-top: 22px;
+    margin-top: 20px;
+  }
+
+  /* Téléphone : tout doit tenir au-dessus de la barre d'actions, et le texte reste lisible sur la photo. */
+  @media (max-width: 699px) {
+    .hero {
+      min-height: min(74svh, 640px);
+    }
+
+    /* Le voile général s'allège : le haut de la photo (suspensions, lettres BH) reste net. */
+    .hero__voile {
+      background: linear-gradient(180deg, rgb(26 23 20 / 0.1) 0%, rgb(26 23 20 / 0.3) 100%);
+    }
+
+    .hero__contenu {
+      padding-block: 96px 22px;
+    }
+
+    .hero .hero__surtitre {
+      font-size: 0.8125rem;
+    }
+
+    /* Fond sombre fondu, accroché au bloc de texte : il suit le texte quelle que soit la hauteur de l'écran. */
+    .hero__contenu::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(
+        180deg,
+        rgb(26 23 20 / 0) 0,
+        rgb(26 23 20 / 0.8) 96px,
+        rgb(26 23 20 / 0.86) 60%,
+        rgb(26 23 20 / 0.92) 100%
+      );
+    }
+
+    .hero__titre {
+      margin-top: 10px;
+      max-width: none;
+      font-size: clamp(2rem, 8.7vw, 2.75rem);
+    }
+
+    .hero__texte {
+      margin-top: 12px;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+
+    .hero .hero__statut {
+      margin-top: 18px;
+      padding: 7px 14px;
+      font-size: 0.9375rem;
+    }
+
+    /* Les deux actions côte à côte, de même largeur. */
+    .hero__actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .hero__actions .bouton {
+      padding-inline: 12px;
+    }
+  }
+
+  /* Petits téléphones (360 px) : l'adresse tient sur une ligne. */
+  @media (max-width: 379px) {
+    .hero .hero__surtitre {
+      letter-spacing: 0.1em;
+    }
+  }
+
+  /* Écran étroit : « Appeler » suffit à l'œil ; « la boutique » reste lu par les lecteurs d'écran. */
+  @media (max-width: 479px) {
+    .hero__complement {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
   }
 </style>

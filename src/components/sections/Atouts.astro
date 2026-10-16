@@ -1,20 +1,30 @@
 ---
 import Icone from '../Icone.astro';
 
+// Quatre raisons de venir, lisibles d'un coup d'œil : un titre qui dit le bénéfice, une ligne qui le précise.
+// Chaque phrase repose sur un fait vérifié : n'en ajouter aucune sans source.
+// (\u00a0 = espace insécable de la typographie française, avant « : » et à l'intérieur des guillemets.)
 const atouts = [
-  { icone: 'parking', titre: 'Parking devant la porte', texte: 'On se gare sans chercher, face au Lidl.' },
-  { icone: 'livraison', titre: 'Livraison sur 20 km', texte: 'Le meuble repart chez vous, pas dans votre coffre.' },
-  { icone: 'vintage', titre: 'Seconde main & vintage', texte: 'Des pièces chinées, à côté du neuf.' },
-  { icone: 'etoile', titre: 'Recommandée sur Google', texte: 'L’accueil, le choix et les prix reviennent dans les avis.' },
+  // Parking devant le magasin, face au Lidl : cité dans les avis Google.
+  { icone: 'parking', titre: 'Parking devant la porte', texte: 'Face au Lidl\u00a0: on se gare sans chercher.' },
+  // Livraison possible dans un rayon de 20 km autour du magasin.
+  { icone: 'livraison', titre: 'Livraison jusqu’à 20 km', texte: 'Votre meuble livré chez vous, autour d’Angoulême.' },
+  // Rareté réelle : une pièce de seconde main ou vintage est unique, une fois vendue elle ne revient pas.
+  { icone: 'vintage', titre: 'Seconde main & vintage', texte: 'Pièces uniques\u00a0: vendues, elles ne reviennent pas.' },
+  // Preuve sociale : avis Google à 5 étoiles et encadré « Bon à savoir » de la fiche Google Maps,
+  // résumé généré par Google : « Les visiteurs adorent chiner des objets vintage originaux et variés
+  // dans cette boutique » (preuves.googleBonASavoir dans src/data/magasin.ts). Les mots entre guillemets
+  // en sont le début exact ; « ici » remplace « dans cette boutique ». Ni note moyenne ni nombre d'avis.
+  { icone: 'etoile', titre: 'Recommandée sur Google', texte: '«\u00a0Les visiteurs adorent chiner\u00a0» ici, résume Google.' },
 ] as const;
 ---
 
 <!-- Atouts -->
 <section class="atouts" aria-label="Les atouts de la boutique">
-  <div class="conteneur atouts__grille">
+  <ul class="conteneur atouts__grille" role="list">
     {
       atouts.map((a) => (
-        <div class="atout">
+        <li class="atout">
           <span class="atout__icone">
             <Icone nom={a.icone} />
           </span>
@@ -22,10 +32,10 @@ const atouts = [
             <p class="atout__titre">{a.titre}</p>
             <p class="atout__texte">{a.texte}</p>
           </div>
-        </div>
+        </li>
       ))
     }
-  </div>
+  </ul>
 </section>
 
 <style is:global>
@@ -34,28 +44,34 @@ const atouts = [
     background: var(--charbon);
     color: #fff;
     padding-block: 28px;
+    border-top: 1px solid rgb(189 129 15 / 0.25);
   }
 
   .atouts__grille {
     display: grid;
-    gap: 22px;
+    gap: 20px;
+    margin-block: 0;
+    list-style: none;
   }
 
   @media (min-width: 640px) {
     .atouts__grille {
       grid-template-columns: repeat(2, 1fr);
+      gap: 24px 32px;
     }
   }
 
-  @media (min-width: 1024px) {
+  /* Quatre colonnes seulement quand chaque titre tient sur une ligne. */
+  @media (min-width: 1180px) {
     .atouts__grille {
       grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
     }
   }
 
   .atout {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     align-items: flex-start;
   }
 
@@ -63,8 +79,8 @@ const atouts = [
     flex: none;
     display: grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     border: 1px solid rgb(189 129 15 / 0.5);
     color: var(--or-clair);
@@ -76,11 +92,15 @@ const atouts = [
   }
 
   .atout__titre {
+    font-size: 1rem;
     font-weight: 600;
+    line-height: 1.3;
   }
 
   .atout__texte {
+    margin-top: 3px;
     font-size: 0.92rem;
-    color: rgb(255 255 255 / 0.68);
+    line-height: 1.5;
+    color: rgb(255 255 255 / 0.72);
   }
 </style>
