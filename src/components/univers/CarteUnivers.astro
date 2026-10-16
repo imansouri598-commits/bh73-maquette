@@ -1,0 +1,282 @@
+---
+// Carte d'univers, partagée par l'accueil et le bas des pages univers.
+// - « mosaique » (accueil) : ligne compacte sur téléphone, grande carte photo à partir de 640 px.
+// - « liste » (pages univers) : ligne compacte à toutes les tailles.
+import { Image } from 'astro:assets';
+import Icone from '../Icone.astro';
+import PhotoUnivers from './PhotoUnivers.astro';
+import lucane from '../../assets/lucane.png';
+import { lien } from '../../data/lien';
+import { typo, type Univers } from '../../data/univers';
+
+type Props = { u: Univers; variante?: 'mosaique' | 'liste'; large?: boolean };
+const { u, variante = 'mosaique', large = false } = Astro.props;
+
+// Étiquettes : uniquement des faits vérifiés, portés par data/univers.ts.
+const pastilles = [
+  u.piecesUniques && { texte: 'Pièces uniques', or: true },
+  u.livraison && { texte: 'Livraison sur 20 km', or: false },
+  u.enLigne && { texte: 'Aussi en ligne', or: false },
+].filter((p): p is { texte: string; or: boolean } => Boolean(p));
+
+const sizes =
+  variante === 'liste'
+    ? '88px'
+    : large
+      ? '(min-width: 960px) 60vw, (min-width: 640px) 50vw, 88px'
+      : '(min-width: 960px) 30vw, (min-width: 640px) 50vw, 88px';
+const widths = variante === 'liste' ? [180, 270] : [180, 270, 480, 760, 1100];
+---
+
+<a href={lien(`/univers/${u.slug}/`)} class:list={['u-carte', `u-carte--${variante}`, { 'u-carte--large': large }]}>
+  <div class="u-carte__media">
+    {
+      u.photo ? (
+        <PhotoUnivers src={u.photo} widths={widths} sizes={sizes} decorative />
+      ) : (
+        <div class="carte__vide u-carte__vide">
+          <Image src={lucane} alt="" width={120} />
+          <span>Photos à faire en boutique</span>
+        </div>
+      )
+    }
+  </div>
+  <div class="u-carte__texte">
+    <h3 class="u-carte__titre">{u.titre}</h3>
+    <p class="u-carte__accroche">{typo(u.accroche)}</p>
+    {
+      pastilles.length > 0 && (
+        <p class="u-carte__pastilles">
+          {pastilles.map((p) => (
+            <span class:list={['pastille', { 'pastille--or': p.or }]}>{p.texte}</span>
+          ))}
+        </p>
+      )
+    }
+    <span class="u-carte__lien"><span class="u-carte__lien-texte">Découvrir</span><Icone nom="fleche" /></span>
+  </div>
+</a>
+
+<style is:global>
+  /* Carte d'univers : ligne compacte (vignette + texte) */
+  .u-carte {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    height: 100%;
+    min-height: 108px;
+    padding: 10px 44px 10px 10px;
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    background: var(--lin);
+    color: var(--texte);
+    text-decoration: none;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .u-carte:hover {
+    border-color: var(--or);
+    box-shadow: var(--ombre);
+  }
+
+  .u-carte__media {
+    flex: none;
+    width: 88px;
+    height: 88px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--encre);
+  }
+
+  .u-carte__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+  }
+
+  .u-carte__media .u-carte__vide {
+    justify-content: center;
+    gap: 4px;
+    padding: 6px;
+    text-align: center;
+    font-size: 0.66rem;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+  }
+
+  .u-carte__media .u-carte__vide img {
+    width: 34px;
+    height: auto;
+  }
+
+  .u-carte__texte {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .u-carte__titre {
+    font-size: 1.2rem;
+  }
+
+  .u-carte__accroche {
+    font-size: 0.92rem;
+    line-height: 1.4;
+    color: var(--discret);
+  }
+
+  .u-carte__pastilles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  /* Flèche seule, à droite de la ligne ; le mot « Découvrir » reste lu par les lecteurs d'écran. */
+  .u-carte__lien {
+    position: absolute;
+    top: 50%;
+    right: 14px;
+    translate: 0 -50%;
+    display: inline-flex;
+    color: var(--or-fonce);
+  }
+
+  .u-carte__lien svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.2s;
+  }
+
+  .u-carte:hover .u-carte__lien svg {
+    transform: translateX(3px);
+  }
+
+  .u-carte__lien-texte {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* Mosaïque de l'accueil : grande carte photo à partir de 640 px */
+  @media (min-width: 640px) {
+    .u-carte--mosaique {
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-end;
+      gap: 0;
+      min-height: 300px;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      background: var(--encre);
+      color: #fff;
+      box-shadow: var(--ombre);
+    }
+
+    .u-carte--mosaique .u-carte__media {
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      width: auto;
+      height: auto;
+      border-radius: 0;
+    }
+
+    /* Voile sombre sous le texte : titre lisible même sur une photo claire */
+    .u-carte--mosaique::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(
+        180deg,
+        transparent 25%,
+        color-mix(in srgb, var(--encre) 55%, transparent) 55%,
+        color-mix(in srgb, var(--encre) 92%, transparent) 100%
+      );
+    }
+
+    .u-carte--mosaique:hover .u-carte__media img {
+      transform: scale(1.04);
+    }
+
+    .u-carte--mosaique .u-carte__media .u-carte__vide {
+      justify-content: flex-start;
+      gap: 12px;
+      padding: 18% 0 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.04em;
+    }
+
+    .u-carte--mosaique .u-carte__media .u-carte__vide img {
+      width: 72px;
+    }
+
+    .u-carte--mosaique .u-carte__texte {
+      gap: 6px;
+      padding: 22px;
+      text-shadow: 0 1px 14px color-mix(in srgb, var(--encre) 70%, transparent);
+    }
+
+    .u-carte--mosaique .u-carte__titre {
+      font-size: 1.55rem;
+    }
+
+    .u-carte--mosaique .u-carte__accroche {
+      font-size: 1rem;
+      color: rgb(255 255 255 / 0.88);
+    }
+
+    .u-carte--mosaique .u-carte__pastilles {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      margin: 0;
+      text-shadow: none;
+    }
+
+    .u-carte--mosaique .u-carte__lien {
+      position: static;
+      translate: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-weight: 600;
+      color: var(--or-clair);
+    }
+
+    .u-carte--mosaique .u-carte__lien svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .u-carte--mosaique .u-carte__lien-texte {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip: auto;
+    }
+  }
+
+  @media (min-width: 960px) {
+    .u-carte--large .u-carte__titre {
+      font-size: clamp(1.9rem, 3vw, 2.5rem);
+    }
+
+    .u-carte--large .u-carte__texte {
+      padding: 30px;
+    }
+  }
+</style>

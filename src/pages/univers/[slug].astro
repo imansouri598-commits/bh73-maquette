@@ -2,9 +2,12 @@
 import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Icone from '../../components/Icone.astro';
+import Statut from '../../components/Statut.astro';
+import CarteUnivers from '../../components/univers/CarteUnivers.astro';
+import PhotoUnivers from '../../components/univers/PhotoUnivers.astro';
 import lucane from '../../assets/lucane.png';
 import { magasin } from '../../data/magasin';
-import { univers, type Univers } from '../../data/univers';
+import { univers, typo, type Univers } from '../../data/univers';
 import { lien } from '../../data/lien';
 
 export function getStaticPaths() {
@@ -13,25 +16,40 @@ export function getStaticPaths() {
 
 const { u } = Astro.props as { u: Univers };
 const autres = univers.filter((x) => x.slug !== u.slug);
+
+// La photo d'en-tête n'est pas répétée dans l'aperçu.
+const galerie = u.galerie.filter((p) => p.src !== u.photo?.src);
+const colonnes = Math.min(galerie.length, 4);
+
+// Photo d'en-tête très large (paysage) : cadre carré sur ordinateur plutôt que portrait, pour ne pas la couper de moitié.
+const paysage = u.photo ? u.photo.width / u.photo.height > 1.2 : false;
+
+const description = `${u.intro} En boutique au ${magasin.adresse.rue}, Angoulême.`;
 ---
 
-<Base titre={`${u.titre} · BH 73 Concept store, Angoulême`} description={`${u.intro} En boutique au ${magasin.adresse.rue}, Angoulême.`}>
-  <section class="u-hero">
+<Base titre={`${u.titre} · BH 73 Concept store, Angoulême`} description={description}>
+  <div class="conteneur">
+    <nav class="u-ariane" aria-label="Fil d’Ariane">
+      <ol>
+        <li><a href={lien('/')}>Accueil</a></li>
+        <li><a href={lien('/#univers')}>Univers</a></li>
+        <li><span aria-current="page">{u.titre}</span></li>
+      </ol>
+    </nav>
+  </div>
+
+  <section class="u-hero" aria-labelledby="u-titre">
     <div class="conteneur u-hero__grille">
-      <div class="u-hero__texte">
-        <a class="u-retour" href={lien('/#univers')}>← Tous les univers</a>
+      <div class="u-hero__tete">
         <p class="surtitre">Univers</p>
-        <h1 class="u-hero__titre">{u.titre}</h1>
-        <p class="chapo">{u.intro}</p>
-        <ul class="u-rayons">
-          {u.rayons.map((r) => <li>{r}</li>)}
-        </ul>
-        <p class="u-prix"><strong>Fourchette de prix :</strong> <span class="a-confirmer">à compléter avec la boutique</span></p>
+        <h1 class="u-hero__titre" id="u-titre">{u.titre}</h1>
+        <p class="chapo">{typo(u.intro)}</p>
       </div>
-      <div class="u-hero__media">
+
+      <div class:list={['u-hero__media', { 'u-hero__media--paysage': paysage }]}>
         {
           u.photo ? (
-            <Image src={u.photo} alt="" widths={[480, 800, 1100]} sizes="(min-width: 960px) 50vw, 100vw" loading="eager" />
+            <PhotoUnivers src={u.photo} widths={[480, 800, 1100, 1400]} sizes="(min-width: 960px) 50vw, 100vw" priority />
           ) : (
             <div class="carte__vide">
               <Image src={lucane} alt="" width={120} />
@@ -40,84 +58,224 @@ const autres = univers.filter((x) => x.slug !== u.slug);
           )
         }
       </div>
+
+      <div class="u-hero__details">
+        <h2 class="u-etiquette">Vous y trouverez</h2>
+        <ul class="u-rayons" role="list">
+          {u.rayons.map((r) => <li>{typo(r)}</li>)}
+        </ul>
+
+        <h2 class="u-etiquette">Bon à savoir</h2>
+        <ul class="u-savoir" role="list">
+          {
+            u.piecesUniques && (
+              <li>
+                <Icone nom="vintage" />
+                <p><strong>Pièces uniques.</strong> Une pièce vendue ne revient pas.</p>
+              </li>
+            )
+          }
+          {
+            u.livraison && (
+              <li>
+                <Icone nom="livraison" />
+                <p>Livraison possible dans un rayon de 20 km.</p>
+              </li>
+            )
+          }
+          {
+            u.enLigne && (
+              <li>
+                <Icone nom="sac" />
+                <div>
+                  <p>Une partie de la sélection se commande en ligne.</p>
+                  <a class="u-savoir__lien" href={magasin.boutiqueEnLigne}>
+                    Voir la boutique en ligne <Icone nom="fleche" />
+                  </a>
+                </div>
+              </li>
+            )
+          }
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3.5 4.5v6.3a2 2 0 0 0 .6 1.4l8.3 8.3a1.5 1.5 0 0 0 2.1 0l5.6-5.6a1.5 1.5 0 0 0 0-2.1L11.8 4.5a2 2 0 0 0-1.4-.6H4.1a.6.6 0 0 0-.6.6z" />
+              <circle cx="8" cy="8.5" r="1.4" />
+            </svg>
+            <p>Fourchette de prix&nbsp;: <span class="a-confirmer">à compléter avec la boutique</span></p>
+          </li>
+        </ul>
+
+        {
+          u.citation && (
+            <figure class="u-citation">
+              {u.citation.cinqEtoiles && (
+                <p class="u-citation__etoiles" role="img" aria-label="Avis noté 5 étoiles sur 5">
+                  {[1, 2, 3, 4, 5].map(() => (
+                    <Icone nom="etoile" />
+                  ))}
+                </p>
+              )}
+              <blockquote>
+                <p>{typo(`« ${u.citation.texte} »`)}</p>
+              </blockquote>
+              <figcaption>{u.citation.lien ? <a href={u.citation.lien}>{u.citation.source}</a> : u.citation.source}</figcaption>
+            </figure>
+          )
+        }
+      </div>
     </div>
   </section>
 
   {
-    u.galerie.length > 1 && (
-      <section class="section u-galerie-section">
+    galerie.length > 0 && (
+      <section class="section u-apercu" aria-labelledby="u-apercu-titre">
         <div class="conteneur">
-          <h2 class="titre-section">En ce moment en rayon</h2>
-          <div class="u-galerie">
-            {u.galerie.map((img) => (
-              <Image src={img} alt="" widths={[360, 600, 900]} sizes="(min-width: 960px) 33vw, 50vw" />
+          <h2 class="titre-section" id="u-apercu-titre">
+            Un aperçu en photos
+          </h2>
+          <p class="chapo">La sélection change au fil des arrivages. Pour une pièce précise, appelez la boutique.</p>
+          <ul
+            class:list={['u-galerie', { 'u-galerie--impair': galerie.length % 2 === 1, 'u-galerie--large': colonnes <= 2 }]}
+            style={`--colonnes: ${colonnes}`}
+            role="list"
+          >
+            {galerie.map((p, i) => (
+              <li>
+                <PhotoUnivers
+                  src={p}
+                  widths={[360, 600, 900, 1200]}
+                  sizes={`(min-width: 960px) ${Math.round(100 / colonnes)}vw, ${galerie.length % 2 === 1 && i === 0 ? '100vw' : '50vw'}`}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
     )
   }
 
-  <section class="section u-cta">
-    <div class="conteneur u-cta__boite">
-      <div>
-        <h2 class="titre-section">Une pièce vous a tapé dans l'œil ?</h2>
-        <p class="chapo chapo--clair">
-          Les pièces uniques partent vite. Appelez la boutique pour savoir si elle est encore là, ou passez la voir : parking devant la porte.
-        </p>
-      </div>
-      <div class="u-cta__actions">
-        <a class="bouton bouton--or" href={magasin.telephone.lien}><Icone nom="telephone" />{magasin.telephone.affiche}</a>
-        <a class="bouton bouton--clair" href={magasin.instagram.url}><Icone nom="instagram" />Voir les arrivages</a>
+  <section class="section u-cta" aria-labelledby="u-cta-titre">
+    <div class="conteneur">
+      <div class="u-cta__boite">
+        <div>
+          <h2 class="titre-section" id="u-cta-titre">Une pièce vous a tapé dans l’œil&nbsp;?</h2>
+          <p class="chapo chapo--clair">
+            Appelez la boutique pour savoir si elle est encore là. Ou passez la voir&nbsp;: parking devant la porte.
+          </p>
+          <Statut class="u-cta__statut" />
+        </div>
+        <div class="u-cta__actions">
+          <a class="bouton bouton--or" href={magasin.telephone.lien}><Icone nom="telephone" />Appeler le {magasin.telephone.affiche}</a>
+          <a class="bouton bouton--clair" href={magasin.itineraire}><Icone nom="itineraire" />Voir l’itinéraire</a>
+          {
+            u.enLigne && (
+              <a class="bouton bouton--clair" href={magasin.boutiqueEnLigne}>
+                <Icone nom="sac" />
+                Voir la boutique en ligne
+              </a>
+            )
+          }
+          <a class="u-cta__insta" href={magasin.instagram.url}><Icone nom="instagram" />Suivre les arrivages sur Instagram</a>
+        </div>
       </div>
     </div>
   </section>
 
-  <section class="section u-autres">
+  <section class="section u-autres" aria-labelledby="u-autres-titre">
     <div class="conteneur">
-      <p class="surtitre">À voir aussi</p>
-      <div class="u-autres__liste">
+      <p class="surtitre">Continuer la visite</p>
+      <h2 class="titre-section" id="u-autres-titre">Les autres univers</h2>
+      <ul class="u-autres__liste" role="list">
         {
           autres.map((x) => (
-            <a href={lien(`/univers/${x.slug}/`)}>
-              {x.titre} <Icone nom="fleche" />
-            </a>
+            <li>
+              <CarteUnivers u={x} variante="liste" />
+            </li>
           ))
         }
-      </div>
+      </ul>
     </div>
   </section>
 </Base>
 
 <style is:global>
+  /* Fil d'Ariane */
+  .u-ariane ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 10px;
+    margin: 0;
+    padding: 10px 0 0;
+    list-style: none;
+    font-size: 0.92rem;
+    color: var(--discret);
+  }
+
+  .u-ariane li {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .u-ariane li + li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-top: 1.5px solid currentColor;
+    border-right: 1.5px solid currentColor;
+    rotate: 45deg;
+    opacity: 0.7;
+  }
+
+  .u-ariane a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--texte);
+    text-decoration: underline;
+    text-decoration-color: var(--trait);
+    text-underline-offset: 4px;
+  }
+
+  .u-ariane a:hover {
+    text-decoration-color: var(--or);
+  }
+
+  /* En-tête : titre et intro, photo, puis rayons et infos (photo à droite sur ordinateur) */
   .u-hero {
-    padding-block: clamp(32px, 6vw, 72px) clamp(48px, 7vw, 88px);
+    padding-block: clamp(12px, 3vw, 32px) clamp(48px, 7vw, 88px);
   }
 
   .u-hero__grille {
     display: grid;
-    gap: 36px;
-    align-items: center;
+    grid-template-areas: 'tete' 'media' 'details';
+    gap: 28px;
+  }
+
+  .u-hero__tete {
+    grid-area: tete;
+  }
+
+  .u-hero__media {
+    grid-area: media;
+  }
+
+  .u-hero__details {
+    grid-area: details;
   }
 
   @media (min-width: 960px) {
     .u-hero__grille {
       grid-template-columns: 1fr 1fr;
-      gap: 64px;
+      grid-template-rows: 1fr auto auto 1fr;
+      grid-template-areas: '. media' 'tete media' 'details media' '. media';
+      gap: 0 64px;
     }
-  }
 
-  .u-retour {
-    display: block;
-    width: fit-content;
-    margin-bottom: 22px;
-    color: var(--discret);
-    text-decoration: none;
-    font-size: 0.95rem;
-  }
-
-  .u-retour:hover {
-    color: var(--texte);
+    .u-hero__details {
+      margin-top: 32px;
+    }
   }
 
   .u-hero__titre {
@@ -126,33 +284,23 @@ const autres = univers.filter((x) => x.slug !== u.slug);
     font-weight: 500;
   }
 
-  .u-rayons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 26px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .u-rayons li {
-    padding: 6px 14px;
-    border-radius: 999px;
-    border: 1px solid var(--trait);
-    background: var(--lin);
-    font-size: 0.92rem;
-  }
-
-  .u-prix {
-    margin-top: 22px;
-    font-size: 0.95rem;
-  }
-
   .u-hero__media {
-    aspect-ratio: 4 / 5;
+    align-self: center;
+    aspect-ratio: 4 / 3;
     border-radius: var(--rayon);
     overflow: hidden;
+    background: var(--encre);
     box-shadow: var(--ombre);
+  }
+
+  @media (min-width: 960px) {
+    .u-hero__media {
+      aspect-ratio: 4 / 5;
+    }
+
+    .u-hero__media--paysage {
+      aspect-ratio: 1;
+    }
   }
 
   .u-hero__media img {
@@ -161,27 +309,196 @@ const autres = univers.filter((x) => x.slug !== u.slug);
     object-fit: cover;
   }
 
-  .u-galerie-section {
+  .u-hero__media .carte__vide {
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  .u-etiquette {
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--or-fonce);
+  }
+
+  .u-etiquette + * {
+    margin-top: 12px;
+  }
+
+  * + .u-etiquette {
+    margin-top: 28px;
+  }
+
+  .u-rayons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 20px;
+    margin-bottom: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .u-rayons li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .u-rayons li::before {
+    content: '';
+    flex: none;
+    width: 6px;
+    height: 6px;
+    background: var(--or);
+    rotate: 45deg;
+    translate: 0 -2px;
+  }
+
+  .u-savoir {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .u-savoir li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .u-savoir svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    color: var(--or-fonce);
+  }
+
+  .u-savoir__lien {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--texte);
+    text-decoration: underline;
+    text-decoration-color: var(--or);
+    text-underline-offset: 4px;
+  }
+
+  .u-savoir .u-savoir__lien svg {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    color: currentColor;
+  }
+
+  /* Citation : avis Google réel ou résumé de Google */
+  .u-citation {
+    margin: 28px 0 0;
+    padding: 20px 22px;
+    border: 1px solid var(--trait);
+    border-radius: var(--rayon);
+    background: var(--lin);
+  }
+
+  .u-citation__etoiles {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 10px;
+    color: var(--or);
+  }
+
+  .u-citation__etoiles svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .u-citation blockquote {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    line-height: 1.45;
+  }
+
+  .u-citation figcaption {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--discret);
+  }
+
+  .u-citation figcaption a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-block: -10px;
+    color: inherit;
+    text-decoration-color: var(--or);
+    text-underline-offset: 3px;
+  }
+
+  /* Aperçu en photos : vignettes de même format, sans trou */
+  .u-apercu {
     background: var(--sable);
   }
 
   .u-galerie {
-    columns: 2 220px;
-    column-gap: 14px;
-    margin-top: 36px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin: 32px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .u-galerie li {
+    aspect-ratio: 4 / 5;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--trait);
+  }
+
+  .u-galerie--impair li:first-child {
+    grid-column: 1 / -1;
+    aspect-ratio: 3 / 2;
   }
 
   .u-galerie img {
     width: 100%;
-    margin-bottom: 14px;
-    border-radius: 10px;
-    break-inside: avoid;
+    height: 100%;
+    object-fit: cover;
   }
 
+  @media (min-width: 960px) {
+    .u-galerie {
+      grid-template-columns: repeat(var(--colonnes), minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .u-galerie--impair li:first-child {
+      grid-column: auto;
+      aspect-ratio: 4 / 5;
+    }
+
+    .u-galerie--large li,
+    .u-galerie--large.u-galerie--impair li:first-child {
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  /* Passer à l'action */
   .u-cta__boite {
     display: grid;
     gap: 28px;
-    padding: clamp(28px, 5vw, 56px);
+    padding: clamp(24px, 5vw, 56px);
     border-radius: calc(var(--rayon) + 6px);
     background: var(--charbon);
     color: #fff;
@@ -191,50 +508,64 @@ const autres = univers.filter((x) => x.slug !== u.slug);
     .u-cta__boite {
       grid-template-columns: 1.4fr 1fr;
       align-items: center;
+      gap: 56px;
     }
+  }
+
+  .u-cta__statut {
+    margin-top: 22px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.08);
+    font-size: 0.95rem;
   }
 
   .u-cta__actions {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 12px;
   }
 
-  @media (min-width: 960px) {
-    .u-cta__actions {
-      justify-content: flex-end;
-    }
+  .u-cta__insta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 44px;
+    font-weight: 600;
+    color: var(--or-clair);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--or-clair) 50%, transparent);
+    text-underline-offset: 4px;
   }
 
+  .u-cta__insta:hover {
+    text-decoration-color: currentColor;
+  }
+
+  .u-cta__insta svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+
+  /* Autres univers */
   .u-autres {
     padding-top: 0;
   }
 
   .u-autres__liste {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
     gap: 10px;
-    margin-top: 18px;
+    margin: 28px 0 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .u-autres__liste a {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 18px;
-    border-radius: 999px;
-    background: var(--lin);
-    border: 1px solid var(--trait);
-    text-decoration: none;
-    font-weight: 500;
-  }
-
-  .u-autres__liste a:hover {
-    border-color: var(--texte);
-  }
-
-  .u-autres__liste svg {
-    width: 16px;
-    height: 16px;
+  @media (min-width: 640px) {
+    .u-autres__liste {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
   }
 </style>
