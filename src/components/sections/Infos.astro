@@ -2,65 +2,85 @@
 import Icone from '../Icone.astro';
 import Statut from '../Statut.astro';
 import { magasin } from '../../data/magasin';
-import { horaires, horairesAConfirmer } from '../../data/horaires';
+import { horaires, horairesAConfirmer, fermeturesExceptionnelles } from '../../data/horaires';
+import { dateDeParis, formatCreneaux, formatPeriode } from '../../data/horaires-calcul';
 
-const formatCreneaux = (creneaux: [string, string][]) =>
-  creneaux.length ? creneaux.map(([o, f]) => `${o.replace(':', ' h ')} – ${f.replace(':', ' h ')}`.replaceAll(' h 00', ' h')).join(' · ') : 'Fermé';
+// Lundi en premier, comme d'habitude en France ; data-jour garde l'index de Date.getDay() (0 = dimanche)
+// pour que le badge Statut mette en avant le jour en cours.
+const semaine = [1, 2, 3, 4, 5, 6, 0].map((i) => ({ ...horaires[i], index: i }));
 
-// Lundi en premier pour l'affichage.
-const semaine = [...horaires.slice(1), horaires[0]].map((j) => ({ ...j, index: horaires.indexOf(j) }));
+// Fermetures exceptionnelles pas encore terminées au moment du build ;
+// le navigateur masque ensuite celles qui se terminent (voir Statut.astro).
+const aujourdhui = dateDeParis(new Date());
+const fermetures = fermeturesExceptionnelles.filter((f) => f.au >= aujourdhui).sort((a, b) => a.du.localeCompare(b.du));
 ---
 
 <!-- Infos pratiques -->
-<section class="section infos" id="infos">
-  <div class="conteneur infos__grille">
-    <div>
-      <p class="surtitre">Venir à la boutique</p>
-      <h2 class="titre-section">Infos pratiques</h2>
-      <Statut class="infos__statut" />
+<section class="section infos" id="infos" aria-labelledby="infos-titre">
+  <div class="conteneur">
+    <p class="surtitre">Infos pratiques</p>
+    <h2 class="titre-section" id="infos-titre">Quand et comment venir</h2>
 
-      <dl class="infos__liste">
-        <div>
-          <dt><Icone nom="itineraire" />Adresse</dt>
-          <dd>{magasin.adresse.rue}, {magasin.adresse.ville}<br /><span class="discret">Parking devant le magasin, face au Lidl</span></dd>
-        </div>
-        <div>
-          <dt><Icone nom="telephone" />Téléphone</dt>
-          <dd><a href={magasin.telephone.lien}>{magasin.telephone.affiche}</a></dd>
-        </div>
-        <div>
-          <dt><Icone nom="email" />Email</dt>
-          <dd><a href={`mailto:${magasin.email}`}>{magasin.email}</a></dd>
-        </div>
-      </dl>
-
-      <h3 class="infos__sous-titre">
-        <Icone nom="horloge" />Horaires {horairesAConfirmer && <span class="a-confirmer">exemple à confirmer</span>}
-      </h3>
-      <table class="horaires">
-        <tbody>
-          {
-            semaine.map((j) => (
-              <tr data-jour={j.index}>
-                <th scope="row">{j.jour}</th>
-                <td>{formatCreneaux(j.creneaux)}</td>
-              </tr>
-            ))
-          }
-        </tbody>
-      </table>
-
-      <div class="infos__actions">
-        <a class="bouton bouton--sombre" href={magasin.itineraire}><Icone nom="itineraire" />Itinéraire</a>
-        <a class="bouton bouton--contour" href={magasin.telephone.lien}><Icone nom="telephone" />Appeler</a>
+    <div class="infos__grille">
+      <!-- 1. Est-ce ouvert ? -->
+      <div class="infos__horaires">
+        <h3 class="infos__label">
+          <Icone nom="horloge" />Horaires {horairesAConfirmer && <span class="a-confirmer">exemple à confirmer</span>}
+        </h3>
+        <Statut class="infos__statut" />
+        {
+          fermetures.map((f) => (
+            <p class="infos__fermeture" data-jusquau={f.au}>
+              {`Fermeture exceptionnelle ${formatPeriode(f)}${f.motif ? ` (${f.motif})` : ''}.`}
+            </p>
+          ))
+        }
+        <table class="horaires">
+          <caption class="visuellement-cache">Horaires d'ouverture, du lundi au dimanche</caption>
+          <tbody>
+            {
+              semaine.map((j) => (
+                <tr data-jour={j.index} class:list={{ 'horaires__ferme': !j.creneaux.length }}>
+                  <th scope="row">
+                    <span class="horaires__jour">
+                      {j.jour}
+                      <span class="pastille pastille--or horaires__auj">Aujourd’hui</span>
+                    </span>
+                  </th>
+                  <td>{formatCreneaux(j.creneaux)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
       </div>
-    </div>
-    <div class="infos__carte">
-      <iframe
-        src={magasin.carte}
-        title="Plan d'accès à BH 73, 381 rue de Bordeaux à Angoulême"
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+      <div class="infos__acces">
+        <!-- 2. Où ? Comment venir ? -->
+        <div class="infos__bloc">
+          <h3 class="infos__label"><Icone nom="itineraire" />Adresse</h3>
+          <address class="infos__adresse">{magasin.adresse.rue}<br />{magasin.adresse.ville}</address>
+          <p class="infos__parking"><Icone nom="parking" />Parking devant le magasin, face au Lidl</p>
+          <a class="bouton bouton--sombre" href={magasin.itineraire}><Icone nom="itineraire" />Voir l’itinéraire</a>
+        </div>
+
+        <!-- 3. Comment joindre la boutique ? -->
+        <div class="infos__bloc">
+          <h3 class="infos__label"><Icone nom="telephone" />Contact</h3>
+          <a class="bouton bouton--contour" href={magasin.telephone.lien}>
+            <Icone nom="telephone" />Appeler le {magasin.telephone.affiche}
+          </a>
+          <a class="infos__email" href={`mailto:${magasin.email}`}><Icone nom="email" />{magasin.email}</a>
+        </div>
+
+        <div class="infos__carte">
+          <iframe
+            src={magasin.carte}
+            title="Plan d'accès à BH 73, 381 rue de Bordeaux à Angoulême"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -73,81 +93,112 @@ const semaine = [...horaires.slice(1), horaires[0]].map((j) => ({ ...j, index: h
 
   .infos__grille {
     display: grid;
-    gap: 40px;
+    gap: 36px;
+    margin-top: 36px;
+  }
+
+  /* Tablette : deux colonnes égales pour que le tableau des horaires garde sa place ; ordinateur : la carte respire. */
+  @media (min-width: 760px) {
+    .infos__grille {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: start;
+      gap: clamp(28px, 4vw, 48px);
+    }
   }
 
   @media (min-width: 960px) {
     .infos__grille {
-      grid-template-columns: 1fr 1.1fr;
-      gap: 64px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
     }
   }
 
-  .infos__statut {
-    margin-top: 18px;
-  }
-
-  .infos__liste {
-    display: grid;
-    gap: 16px;
-    margin: 28px 0 0;
-  }
-
-  .infos__liste dt,
-  .infos__sous-titre {
+  .infos__label {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font: 600 0.8rem/1.3 var(--sans);
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--or-fonce);
   }
 
-  .infos__liste svg,
-  .infos__sous-titre svg {
+  .infos__label svg {
     width: 16px;
     height: 16px;
   }
 
-  .infos__liste dd {
-    margin: 4px 0 0;
+  /* 1. Horaires : le statut en direct, puis la semaine avec le jour en cours mis en avant. */
+  .infos__horaires {
+    padding: 24px clamp(18px, 3vw, 28px);
+    border-radius: var(--rayon);
+    background: var(--creme);
+    border: 1px solid var(--trait);
+  }
+
+  /* Arrondi égal à la moitié de la hauteur d'une ligne : pilule sur une ligne, rectangle arrondi si le texte passe à la ligne. */
+  .infos__statut {
+    margin-top: 16px;
+    padding: 10px 16px;
+    border-radius: 22px;
+    background: var(--lin);
+    border: 1px solid var(--trait);
     font-size: 1.05rem;
+    line-height: 1.35;
   }
 
-  .infos__liste a {
-    text-decoration-color: var(--or);
-    text-underline-offset: 3px;
-  }
-
-  .discret {
-    color: var(--discret);
+  .infos__fermeture {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--sable);
+    font-weight: 600;
     font-size: 0.95rem;
-  }
-
-  .infos__sous-titre {
-    margin-top: 32px;
-    font-family: var(--sans);
   }
 
   .horaires {
     width: 100%;
-    margin-top: 10px;
+    margin-top: 14px;
     border-collapse: collapse;
   }
 
   .horaires th,
   .horaires td {
-    padding: 9px 0;
+    padding: 10px 0;
     border-bottom: 1px solid var(--trait);
     text-align: left;
     font-weight: 400;
   }
 
+  .horaires tr:last-child th,
+  .horaires tr:last-child td {
+    border-bottom: 0;
+  }
+
   .horaires td {
     text-align: right;
+    white-space: nowrap;
     font-variant-numeric: tabular-nums;
+  }
+
+  .horaires__ferme td {
+    color: var(--discret);
+  }
+
+  /* Sur un écran étroit, la pastille passe sous le jour sans décalage. */
+  .horaires__jour {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+
+  .horaires__auj {
+    display: none;
+  }
+
+  .horaires tr.aujourdhui .horaires__auj {
+    display: inline-flex;
   }
 
   .horaires tr.aujourdhui th,
@@ -156,26 +207,93 @@ const semaine = [...horaires.slice(1), horaires[0]].map((j) => ({ ...j, index: h
     color: var(--or-fonce);
   }
 
-  .infos__actions {
+  /* 2 et 3. Adresse et contact, chacun avec son action ; la carte en dernier sur mobile, en tête sur ordinateur. */
+  .infos__acces {
+    display: grid;
+    gap: 36px;
+  }
+
+  @media (min-width: 960px) {
+    .infos__acces {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 32px;
+    }
+
+    .infos__carte {
+      grid-column: 1 / -1;
+      order: -1;
+    }
+  }
+
+  .infos__bloc {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
-    margin-top: 28px;
+  }
+
+  .infos__adresse {
+    font-style: normal;
+    font-size: 1.15rem;
+    line-height: 1.45;
+  }
+
+  .infos__parking {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 4px;
+    color: var(--discret);
+  }
+
+  .infos__parking svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    margin-top: 3px;
+    color: var(--or-fonce);
+  }
+
+  .infos__email {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    text-decoration-color: var(--or);
+    text-underline-offset: 3px;
+  }
+
+  .infos__email svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    color: var(--or-fonce);
   }
 
   .infos__carte {
-    min-height: 380px;
+    height: 280px;
     border-radius: var(--rayon);
     overflow: hidden;
     box-shadow: var(--ombre);
     background: var(--sable);
   }
 
+  @media (min-width: 960px) {
+    .infos__carte {
+      height: 300px;
+    }
+  }
+
   .infos__carte iframe {
     display: block;
     width: 100%;
     height: 100%;
-    min-height: 380px;
     border: 0;
+  }
+
+  /* Utilitaire global historique, gardé pour les autres sections qui l'emploieraient. */
+  .discret {
+    color: var(--discret);
+    font-size: 0.95rem;
   }
 </style>

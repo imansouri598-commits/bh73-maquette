@@ -1,67 +1,64 @@
 ---
 import { horaires } from '../data/horaires';
+import { resumeHoraires } from '../data/horaires-calcul';
 
+// API inchangée : seule la classe est paramétrable (utilisé par le Hero et les Infos, plusieurs fois par page si besoin).
 type Props = { class?: string };
 const { class: classe } = Astro.props;
+
+// Texte de repli, lisible sans JavaScript et avant le premier calcul : les horaires habituels.
+const repli = resumeHoraires(horaires);
 ---
 
-<span class:list={['statut', classe]} data-statut data-horaires={JSON.stringify(horaires)}>
-  <span class="statut__point"></span>
-  <span class="statut__texte">Horaires d'ouverture</span>
+<span class:list={['statut', classe]} data-statut>
+  <span class="statut__point" aria-hidden="true"></span>
+  <span class="statut__texte">{repli}</span>
 </span>
 
 <script>
-  type Jour = { jour: string; creneaux: [string, string][] };
+  import { horaires, fermeturesExceptionnelles } from '../data/horaires';
+  import { etatBoutique } from '../data/horaires-calcul';
 
-  const enMinutes = (hhmm: string) => {
-    const [h, m] = hhmm.split(':').map(Number);
-    return h * 60 + m;
-  };
-  const enHeure = (hhmm: string) => {
-    const [h, m] = hhmm.split(':');
-    return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`;
-  };
-
-  // Heure de Paris, quel que soit le fuseau du visiteur.
-  function maintenantAParis() {
-    const parties = new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Paris',
-      weekday: 'short',
-      hour: '2-digit',
-      minute: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(new Date());
-    const val = (type: string) => parties.find((p) => p.type === type)?.value ?? '';
-    const jours = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return { jour: jours.indexOf(val('weekday')), minutes: Number(val('hour')) * 60 + Number(val('minute')) };
-  }
-
-  function calculer(semaine: Jour[]) {
-    const { jour, minutes } = maintenantAParis();
-    const creneauEnCours = semaine[jour].creneaux.find(([o, f]) => minutes >= enMinutes(o) && minutes < enMinutes(f));
-    if (creneauEnCours) {
-      return { etat: 'ouvert', texte: `Ouvert · ferme à ${enHeure(creneauEnCours[1])}`, jour };
+  // Un seul script pour toutes les instances du badge (Astro ne l'inclut qu'une fois par page).
+  // Calcul à l'heure de Paris, quel que soit le fuseau du visiteur (voir horaires-calcul.ts).
+  function calculer() {
+    try {
+      return etatBoutique(new Date(), horaires, fermeturesExceptionnelles);
+    } catch {
+      return null; // Intl indisponible : le texte de repli reste affiché.
     }
-    for (let decalage = 0; decalage < 7; decalage++) {
-      const j = (jour + decalage) % 7;
-      const prochain = semaine[j].creneaux.find(([o]) => decalage > 0 || enMinutes(o) > minutes);
-      if (prochain) {
-        const quand = decalage === 0 ? '' : decalage === 1 ? ' demain' : ` ${semaine[j].jour.toLowerCase()}`;
-        return { etat: 'ferme', texte: `Fermé · ouvre${quand} à ${enHeure(prochain[0])}`, jour };
-      }
-    }
-    return { etat: 'ferme', texte: 'Fermé', jour };
   }
 
   function mettreAJour() {
-    document.querySelectorAll<HTMLElement>('[data-statut]').forEach((el) => {
-      const { etat, texte, jour } = calculer(JSON.parse(el.dataset.horaires ?? '[]'));
-      el.dataset.etat = etat;
-      el.querySelector('.statut__texte')!.textContent = texte;
-      document.querySelectorAll(`[data-jour="${jour}"]`).forEach((ligne) => ligne.classList.add('aujourdhui'));
+    const statut = calculer();
+    if (!statut) return;
+    document.querySelectorAll<HTMLElement>('[data-statut]').forEach((badge) => {
+      badge.dataset.etat = statut.etat;
+      const texte = badge.querySelector('.statut__texte');
+      if (texte && texte.textContent !== statut.texte) texte.textContent = statut.texte;
+    });
+    // Jour en cours mis en avant partout où un élément porte data-jour (0 = dimanche) : tableau des horaires.
+    document.querySelectorAll<HTMLElement>('[data-jour]').forEach((el) => {
+      const estAujourdhui = Number(el.dataset.jour) === statut.jour;
+      el.classList.toggle('aujourdhui', estAujourdhui);
+      if (estAujourdhui) el.setAttribute('aria-current', 'date');
+      else el.removeAttribute('aria-current');
+    });
+    // Fermetures exceptionnelles annoncées (data-jusquau = dernier jour) : masquées une fois passées.
+    document.querySelectorAll<HTMLElement>('[data-jusquau]').forEach((el) => {
+      el.hidden = (el.dataset.jusquau ?? '') < statut.date;
     });
   }
 
-  mettreAJour();
-  setInterval(mettreAJour, 60_000);
+  // Recalcul à chaque changement de minute (les « ferme dans 35 min » restent justes),
+  // et dès que l'onglet redevient visible ou que la page revient de l'historique (minuteries suspendues entre-temps).
+  function planifier() {
+    mettreAJour();
+    setTimeout(planifier, 60_000 - (Date.now() % 60_000) + 50);
+  }
+  planifier();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) mettreAJour();
+  });
+  window.addEventListener('pageshow', mettreAJour);
 </script>

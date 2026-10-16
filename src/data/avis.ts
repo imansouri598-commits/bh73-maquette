@@ -48,3 +48,30 @@ export const avis: Avis[] = [
     texte: 'Boutique au top !!',
   },
 ];
+
+// Extraits mis en avant sur l'accueil : un par thème qui revient souvent dans les avis.
+// Le parking et le vintage sont couverts par le résumé « Bon à savoir » de Google (magasin.ts, preuves).
+export type Extrait = { theme: string; auteur: string; citation: string };
+
+// Le passage doit figurer mot pour mot dans l'avis d'origine, sinon le build s'arrête.
+// « … » signale une coupe : ajouté au début si le passage ne commence pas l'avis,
+// et à la fin s'il s'arrête au milieu d'une phrase.
+function extrait(theme: string, auteur: string, passage: string): Extrait {
+  const original = avis.find((a) => a.auteur === auteur);
+  if (!original || !original.texte.includes(passage)) {
+    throw new Error(`Extrait introuvable mot pour mot dans l'avis de ${auteur} : « ${passage} »`);
+  }
+  const coupeAuDebut = !original.texte.startsWith(passage);
+  const coupeEnFin = !original.texte.endsWith(passage) && !/[.!?…]$/.test(passage);
+  return { theme, auteur, citation: `${coupeAuDebut ? '… ' : ''}${passage}${coupeEnFin ? ' …' : ''}` };
+}
+
+export const extraits: Extrait[] = [
+  extrait('L’accueil', 'Marc L.', 'Excellents conseils, précédés d’un accueil chaleureux sans être intrusif.'),
+  extrait('Le choix', 'Lily B.', 'une riche sélection d’articles soigneusement choisis ! Un incontournable d’Angoulême !'),
+  extrait(
+    'Les prix',
+    'Isabelle L.',
+    "Les prix sont abordables, surtout pour des modèles bien plus originaux que ce que l'on trouve sur le plateau.",
+  ),
+];
